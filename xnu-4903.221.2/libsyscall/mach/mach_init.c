@@ -95,6 +95,9 @@ host_page_size(__unused host_t host, vm_size_t *out_page_size)
 /* 
  * mach_init() must be called explicitly in static executables (including dyld).
  * called by libSystem_initializer() in dynamic executables
+ *
+ * mach_init()必须在静态可执行文件（包括DYLD）中显式调用。
+ * 被在动态可执行文件中 libSystem_initializer() 调用      分为静态/动态调用？
  */
 int
 mach_init(void)
