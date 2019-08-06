@@ -648,10 +648,10 @@ class AutoreleasePoolPage
 #if PROTECT_AUTORELEASEPOOL
         PAGE_MAX_SIZE;  // must be multiple of vm page size
 #else
-        PAGE_MAX_SIZE;  // size and alignment, power of 2
+    PAGE_MAX_SIZE;  // size and alignment, power of 2
 #endif
     static size_t const COUNT = SIZE / sizeof(id);
-
+    
     magic_t const magic;
     id *next;
     pthread_t const thread;

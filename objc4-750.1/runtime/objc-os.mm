@@ -517,6 +517,10 @@ map_images_nolock(unsigned mhCount, const char * const mhPaths[],
     // (The executable may not be present in this infoList if the 
     // executable does not contain Objective-C code but Objective-C 
     // is dynamically loaded later.
+    
+    /*
+        直到找到可执行文件，才能执行一次runtime初始化。这需要在进一步初始化之前完成。（如果可执行文件不包含Objective-C代码，但Objective-C稍后会动态加载，则可执行文件可能不会出现在这个Infolist中。
+     */
     if (firstTime) {
         sel_init(selrefCount);
         arr_init();
