@@ -333,8 +333,9 @@ storeWeak(id *location, objc_object *newObj)
             weak_register_no_lock(&newTable->weak_table, (id)newObj, location, 
                                   crashIfDeallocating);
         // weak_register_no_lock returns nil if weak store should be rejected
-
+        //weak_register_no_lock 如果弱存储被拒绝，则返回nil
         // Set is-weakly-referenced bit in refcount table.
+        //在refcount表中，设置弱引用位。
         if (newObj  &&  !newObj->isTaggedPointer()) {
             newObj->setWeaklyReferenced_nolock();
         }
@@ -355,7 +356,9 @@ storeWeak(id *location, objc_object *newObj)
 /** 
  * This function stores a new value into a __weak variable. It would
  * be used anywhere a __weak variable is the target of an assignment.
- * 
+ *
+ * 这个函数将一个新值存储到一个弱变量中。它将被用于任何地方，一个弱变量是一个任务的目标。
+ *
  * @param location The address of the weak pointer itself
  * @param newObj The new object this weak ptr should now point to
  * 

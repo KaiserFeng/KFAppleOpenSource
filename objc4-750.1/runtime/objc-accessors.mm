@@ -31,6 +31,10 @@
 
 // stub interface declarations to make compiler happy.
 
+/*
+ * 属性 存取器
+ */
+
 @interface __NSCopyable
 - (id)copyWithZone:(void *)zone;
 @end
@@ -90,6 +94,9 @@ static inline void reallySetProperty(id self, SEL _cmd, id newValue, ptrdiff_t o
         oldValue = *slot;
         *slot = newValue;
     } else {
+        /*
+         * 自旋锁  这就是为什么nonatomic效率要高了，因为atomic加了一个自旋锁
+         */
         spinlock_t& slotlock = PropertyLocks[slot];
         slotlock.lock();
         oldValue = *slot;
