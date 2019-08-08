@@ -4840,6 +4840,10 @@ log_and_fill_cache(Class cls, IMP imp, SEL sel, id receiver, Class implementer)
 **********************************************************************/
 IMP _class_lookupMethodAndLoadCache3(id obj, SEL sel, Class cls)
 {
+//    if (cls && cls->data() && cls->data()->ro->name) {
+        _objc_inform("1、==== %s\n",sel_getName(sel));
+//    }
+    
     return lookUpImpOrForward(cls, sel, obj, 
                               YES/*initialize*/, NO/*cache*/, YES/*resolver*/);
 }
@@ -6854,6 +6858,8 @@ initializeTaggedPointerObfuscator(void)
 * Set the class to use for the given tagged pointer index.
 * Aborts if the tag is out of range, or if the tag is already 
 * used by some other class.
+* 设置用于给定标记指针索引的类。
+* 如果标记超出范围，或者标记已被其他类使用，则中止。
 **********************************************************************/
 void
 _objc_registerTaggedPointerClass(objc_tag_index_t tag, Class cls)

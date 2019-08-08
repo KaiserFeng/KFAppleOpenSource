@@ -414,6 +414,15 @@ _objc_makeTaggedPointer(objc_tag_index_t tag, uintptr_t value)
 static inline bool 
 _objc_isTaggedPointer(const void * _Nullable ptr)
 {
+    /*
+     * 对象地址 与 _OBJC_TAG_MASK得到的结果是 _OBJC_TAG_MASK，就是标记指针。
+     * 个人感觉是对象地址的最后 1bit 不为0就是标记指针。
+     * 特点:
+     *    1 专门用来存储小的对象，例如NSNumber和NSDate
+     *    2 指针的值不再是地址了，而是真正的值。所以，实际上它不再是一个对象了，它只是一个披着对象皮的普通变量而已。所以，它的内存并不存储在堆中，也不需要 malloc 和 free。(有待商榷)
+     *    3 在内存读取上有着 3 倍的效率，创建时比以前快 106 倍。
+     * 苹果引入Tagged Pointer，不但减少了 64 位机器下程序的   “内存占用” ，还提高了  “运行效率”  。完美地解决了小内存对象在存储和访问效率上的问题。
+     */
     return ((uintptr_t)ptr & _OBJC_TAG_MASK) == _OBJC_TAG_MASK;
 }
 

@@ -10,7 +10,7 @@
 
 @interface Person ()
 
-@property (nonatomic, weak) NSString *name;   //!< 姓名
+@property (nonatomic, copy) NSString *name;   //!< 姓名
 @property (nonatomic, weak) NSString *address;  //!<地址
 @property (nonatomic, copy) NSString *titleName;   //!< 标题
 
@@ -18,13 +18,19 @@
 
 @implementation Person
 
+- (void)dealloc
+{
+    NSLog(@"%s",__FUNCTION__);
+}
+
 - (void)personName:(NSString *)arg1 {
     self.name = arg1;       // msg_send(self,"setName") -> objc_storeWeak(arg1, address)
-    self.name = arg1;
-    self.titleName = arg1;  // msg_send(self,"setTitleName") -> objc_setProperty_nonatomic_copy -> copyWithZone
+//    self.name = arg1;
+//    self.titleName = arg1;  // msg_send(self,"setTitleName") -> objc_setProperty_nonatomic_copy -> copyWithZone
 }
 
 - (void)personAddress:(NSString *)arg1 {
+    self.address = arg1;
     self.address = arg1;
 }
 

@@ -90,9 +90,9 @@ enum HaveOld { DontHaveOld = false, DoHaveOld = true };
 enum HaveNew { DontHaveNew = false, DoHaveNew = true };
 
 struct SideTable {
-    spinlock_t slock;
-    RefcountMap refcnts;
-    weak_table_t weak_table;
+    spinlock_t slock;           //自旋锁
+    RefcountMap refcnts;        //引用计数表
+    weak_table_t weak_table;    //弱引用表
 
     SideTable() {
         memset(&weak_table, 0, sizeof(weak_table));
@@ -263,6 +263,14 @@ objc_storeStrong(id *location, id obj)
 enum CrashIfDeallocating {
     DontCrashIfDeallocating = false, DoCrashIfDeallocating = true
 };
+
+/*
+ * 如果 HaveOld 是 true, 变量是个有效值，需要被及时清理。变量可以为 nil。
+ * 如果 HaveNew 是 true, 需要一个新的 value 来替换变量。变量可以为 nil
+ * 如果crashifdeallocation 是 ture ，那么如果 newObj 是 deallocating，或者 newObj 的类不支持弱引用，则该进程就会停止。
+ * 如果crashifdeallocation 是 false，那么 nil 会被存储。
+ *
+ */
 template <HaveOld haveOld, HaveNew haveNew,
           CrashIfDeallocating crashIfDeallocating>
 static id 
@@ -273,6 +281,8 @@ storeWeak(id *location, objc_object *newObj)
 
     Class previouslyInitializedClass = nil;
     id oldObj;
+    
+    // 创建新旧散列表
     SideTable *oldTable;
     SideTable *newTable;
 
@@ -281,19 +291,23 @@ storeWeak(id *location, objc_object *newObj)
     // Retry if the old value changes underneath us.
  retry:
     if (haveOld) {
+        // 如果 HaveOld 为 true ，更改指针，获得以 oldObj 为索引所存储的值地址
         oldObj = *location;
         oldTable = &SideTables()[oldObj];
     } else {
         oldTable = nil;
     }
     if (haveNew) {
+        // 获得以 newObj 为索引所存储的值对象
         newTable = &SideTables()[newObj];
     } else {
         newTable = nil;
     }
 
+    // 对两个 table 进行加锁操作，防止多线程中竞争冲突
     SideTable::lockTwo<haveOld, haveNew>(oldTable, newTable);
 
+    //  location 应该与 oldObj 保持一致，如果不同，说明当前的 location 已经处理过 oldObj 可是又被其他线程所修改, 保证线程安全，这个判断用来避免线程冲突重处理问题
     if (haveOld  &&  *location != oldObj) {
         SideTable::unlockTwo<haveOld, haveNew>(oldTable, newTable);
         goto retry;
@@ -302,8 +316,12 @@ storeWeak(id *location, objc_object *newObj)
     // Prevent a deadlock between the weak reference machinery
     // and the +initialize machinery by ensuring that no 
     // weakly-referenced object has an un-+initialized isa.
+    
+    // 防止弱引用之间发生死锁，并且通过 +initialize 初始化构造器保证所有弱引用的 isa 非空指向
     if (haveNew  &&  newObj) {
+        // 获得新对象的 isa 指针
         Class cls = newObj->getIsa();
+        // 判断 isa 非空且已经初始化
         if (cls != previouslyInitializedClass  &&  
             !((objc_class *)cls)->isInitialized()) 
         {
@@ -316,6 +334,8 @@ storeWeak(id *location, objc_object *newObj)
             // then we may proceed but it will appear initializing and 
             // not yet initialized to the check above.
             // Instead set previouslyInitializedClass to recognize it on retry.
+            
+            // 如果该类已经完成执行 +initialize 方法是最好的，如果该类 + initialize 在线程中，例如 +initialize 正在调用storeWeak 方法，那么则需要手动对其增加保护策略，并设置 previouslyInitializedClass 指针进行标记然后重新尝试
             previouslyInitializedClass = cls;
 
             goto retry;
@@ -323,11 +343,13 @@ storeWeak(id *location, objc_object *newObj)
     }
 
     // Clean up old value, if any.
+    // 清除旧值
     if (haveOld) {
         weak_unregister_no_lock(&oldTable->weak_table, oldObj, location);
     }
 
     // Assign new value, if any.
+    // 分配新值
     if (haveNew) {
         newObj = (objc_object *)
             weak_register_no_lock(&newTable->weak_table, (id)newObj, location, 
@@ -403,8 +425,11 @@ objc_storeWeakOrNil(id *location, id newObj)
  * This function IS NOT thread-safe with respect to concurrent 
  * modifications to the weak variable. (Concurrent weak clear is safe.)
  *
- * @param location Address of __weak ptr. 
- * @param newObj Object ptr. 
+ * 初始化指向某个对象位置的新弱指针。
+ * 对于弱变量的并发修改，这个函数不是线程安全的。（并发弱清除是安全的。）
+ *
+ * @param location Address of __weak ptr.   // 弱指针地址
+ * @param newObj Object ptr.                //新对象地址
  */
 id
 objc_initWeak(id *location, id newObj)
@@ -439,7 +464,8 @@ objc_initWeakOrNil(id *location, id newObj)
  *
  * This function IS NOT thread-safe with respect to concurrent 
  * modifications to the weak variable. (Concurrent weak clear is safe.)
- * 
+ *
+ * 销毁弱指针与其在内部弱表中引用的对象之间的关系。如果弱指针没有引用任何内容，则不需要编辑弱表。
  * @param location The weak pointer address. 
  */
 void
@@ -1604,7 +1630,11 @@ void
 objc_release(id obj)
 {
     if (!obj) return;
-    if (obj->isTaggedPointer()) return;
+    if (obj->isTaggedPointer()) {
+//        _objc_inform("isTaggedPointer == %p  == %s\n",obj,object_getClassName(obj));
+        return;
+    }
+//    _objc_inform("isNotTaggedPointer == %p  == %s\n",obj,object_getClassName(obj));
     return obj->release();
 }
 

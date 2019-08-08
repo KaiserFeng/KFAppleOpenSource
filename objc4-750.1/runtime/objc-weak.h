@@ -101,14 +101,9 @@ typedef DisguisedPtr<objc_object *> weak_referrer_t;
 #define REFERRERS_OUT_OF_LINE 2
 
 struct weak_entry_t {
-    /*
-     * 模版类指针 待研究！！！(伪装指针，不知道干嘛用的)
-     */
+    /** 模版类指针 待研究！！！(伪装指针，不知道干嘛用的)*/
     DisguisedPtr<objc_object> referent;
-    
-    /*
-     * union 多成员共享同一且相同大小的内存空间
-     */
+    /** union 多成员共享同一且相同大小的内存空间*/
     union {
         struct {
             weak_referrer_t *referrers;
@@ -119,11 +114,9 @@ struct weak_entry_t {
         };
         struct {
             // out_of_line_ness field is low bits of inline_referrers[1]
-            /*
-             * 如果某一对象对应的弱引用 <= WEAK_INLINE_COUNT(4)时,那么弱引用将保存在inline数组中;
+            /** 如果某一对象对应的弱引用 <= WEAK_INLINE_COUNT(4)时,那么弱引用将保存在inline数组中;
              * 如果对应的弱引用数量 > WEAK_INLINE_COUNT(4)时,那么弱引用将保存在outline数组中;
-             * 实现逻辑见 objc-weak::append_referrer
-             */
+             * 实现逻辑见 objc-weak::append_referrer */
             weak_referrer_t  inline_referrers[WEAK_INLINE_COUNT];
         };
     };

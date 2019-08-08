@@ -316,6 +316,7 @@ static void weak_entry_remove(weak_table_t *weak_table, weak_entry_t *entry)
 {
     // remove entry
     if (entry->out_of_line()) free(entry->referrers);
+    //释放内存
     bzero(entry, sizeof(*entry));
 
     weak_table->num_entries--;
@@ -428,7 +429,7 @@ weak_unregister_no_lock(weak_table_t *weak_table, id referent_id,
  * @param referrer The weak pointer address.                           // 弱指针地址
  */
 id 
-weak_register_no_lock(weak_table_t *weak_table, id referent_id, 
+weak_register_no_lock(weak_table_t *weak_table, id referent_id,
                       id *referrer_id, bool crashIfDeallocating)
 {
     objc_object *referent = (objc_object *)referent_id;
@@ -529,6 +530,7 @@ weak_clear_no_lock(weak_table_t *weak_table, id referent_id)
         objc_object **referrer = referrers[i];
         if (referrer) {
             if (*referrer == referent) {
+                //引用置nil
                 *referrer = nil;
             }
             else if (*referrer) {

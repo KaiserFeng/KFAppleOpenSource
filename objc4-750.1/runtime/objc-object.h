@@ -563,7 +563,8 @@ objc_object::rootReleaseShouldDealloc()
 ALWAYS_INLINE bool 
 objc_object::rootRelease(bool performDealloc, bool handleUnderflow)
 {
-    if (isTaggedPointer()) return false;
+    if (isTaggedPointer())
+        return false;
 
     bool sideTableLocked = false;
 
