@@ -6,12 +6,12 @@
 //
 
 #import "Person.h"
-#import <objc/runtime.h>
+//#import <objc/runtime.h>
 
 @interface Person ()
 
 @property (nonatomic, copy) NSString *name;   //!< 姓名
-@property (nonatomic, weak) NSString *address;  //!<地址
+@property (nonatomic, strong) NSString *address;  //!<地址
 @property (nonatomic, copy) NSString *titleName;   //!< 标题
 
 @end
@@ -35,17 +35,17 @@
 }
 
 
-- (void)runTests
-{
-    unsigned int count;
-    Method *methods = class_copyMethodList([self class], &count);
-    for (int i = 0; i < count; i++)
-    {
-        Method method = methods[i];
-        SEL selector = method_getName(method);
-        NSString *name = NSStringFromSelector(selector);
-        NSLog(@"Person '%@' completed successfuly", name);
-    }
-}
+//- (void)runTests
+//{
+//    unsigned int count;
+//    Method *methods = class_copyMethodList([self class], &count);
+//    for (int i = 0; i < count; i++)
+//    {
+//        Method method = methods[i];
+//        SEL selector = method_getName(method);
+//        NSString *name = NSStringFromSelector(selector);
+//        NSLog(@"Person '%@' completed successfuly", name);
+//    }
+//}
 
 @end

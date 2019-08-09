@@ -689,6 +689,10 @@ static bool is_valid_direct_key(tls_key_t k) {
 }
 #endif
 
+
+/*
+ * 以下两个函数的作用？？？（商榷）
+ */
 static inline void *tls_get_direct(tls_key_t k) 
 { 
     assert(is_valid_direct_key(k));

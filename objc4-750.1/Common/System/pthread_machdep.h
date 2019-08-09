@@ -62,6 +62,7 @@
 ** Define macros for inline pthread_getspecific() usage.
 ** We reserve a number of slots for Apple internal use.
 ** This number can grow dynamically, no need to fix it.
+** 苹果内部使用，定义的一些系统架构的宏
 */
 
 /* This header contains pre defined thread specific keys */

@@ -26,7 +26,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "runtime/NSObject.mm"
-            timestampString = "586950353.591433"
+            timestampString = "587027046.7440161"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "437"
@@ -42,7 +42,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "runtime/NSObject.mm"
-            timestampString = "586950353.5918159"
+            timestampString = "587027046.789611"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "449"
@@ -58,11 +58,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "runtime/NSObject.mm"
-            timestampString = "586950353.591988"
+            timestampString = "587027046.789735"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1691"
-            endingLineNumber = "1691"
+            startingLineNumber = "1755"
+            endingLineNumber = "1755"
             landmarkName = "objc_clear_deallocating(id obj)"
             landmarkType = "9">
          </BreakpointContent>
@@ -74,11 +74,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "runtime/NSObject.mm"
-            timestampString = "586950353.592128"
+            timestampString = "587027046.789826"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1603"
-            endingLineNumber = "1603"
+            startingLineNumber = "1667"
+            endingLineNumber = "1667"
             landmarkName = "objc_object::sidetable_clearDeallocating()"
             landmarkType = "7">
          </BreakpointContent>
@@ -90,11 +90,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "runtime/NSObject.mm"
-            timestampString = "586950353.592244"
+            timestampString = "587027046.789912"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1260"
-            endingLineNumber = "1260"
+            startingLineNumber = "1324"
+            endingLineNumber = "1324"
             landmarkName = "objc_object::clearDeallocating_slow()"
             landmarkType = "7">
          </BreakpointContent>
@@ -102,60 +102,28 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             symbolName = "objc_autoreleasePoolPop"
             moduleName = "">
             <Locations>
                <Location
-                  shouldBeEnabled = "Yes"
+                  shouldBeEnabled = "No"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
                   symbolName = "objc_autoreleasePoolPop"
                   moduleName = "libobjc.A.dylib"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/youma001/Desktop/KFGithub/KFAppleOpenSource/objc4-750.1/runtime/NSObject.mm"
-                  timestampString = "586950354.100191"
+                  timestampString = "587009146.275378"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "1872"
-                  endingLineNumber = "1872"
+                  startingLineNumber = "1904"
+                  endingLineNumber = "1904"
                   offsetFromSymbolStart = "12">
                </Location>
             </Locations>
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "runtime/NSObject.mm"
-            timestampString = "586950353.592358"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1089"
-            endingLineNumber = "1089"
-            landmarkName = "pop(void *token)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "runtime/NSObject.mm"
-            timestampString = "586950353.59244"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "817"
-            endingLineNumber = "817"
-            landmarkName = "releaseUntil(id *stop)"
-            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -180,12 +148,44 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "KFObjc4-test/main.m"
-            timestampString = "586950353.5927989"
+            filePath = "runtime/objc-weak.mm"
+            timestampString = "586950672.84088"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "26"
-            endingLineNumber = "26"
+            startingLineNumber = "547"
+            endingLineNumber = "547"
+            landmarkName = "weak_clear_no_lock(weak_table_t *weak_table, id referent_id)"
+            landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "runtime/NSObject.mm"
+            timestampString = "587027046.7900929"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "922"
+            endingLineNumber = "922"
+            landmarkName = "tls_dealloc(void *p)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "KFObjc4-test/main.m"
+            timestampString = "587027046.790247"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "12"
+            endingLineNumber = "12"
             landmarkName = "main()"
             landmarkType = "9">
          </BreakpointContent>
@@ -197,29 +197,13 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "runtime/NSObject.mm"
-            timestampString = "586950532.5006"
+            timestampString = "587027046.808208"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "834"
-            endingLineNumber = "834"
-            landmarkName = "releaseUntil(id *stop)"
+            startingLineNumber = "1212"
+            endingLineNumber = "1212"
+            landmarkName = "init()"
             landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "runtime/objc-weak.mm"
-            timestampString = "586950672.84088"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "547"
-            endingLineNumber = "547"
-            landmarkName = "weak_clear_no_lock(weak_table_t *weak_table, id referent_id)"
-            landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

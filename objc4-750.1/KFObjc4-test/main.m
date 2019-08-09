@@ -16,13 +16,28 @@ int main(int argc, const char * argv[]) {
         [p1 personAddress:@"456"];
 //        [p1 runTests];
         
-        id __weak p2 = p1;
-        for (int i = 0; i < 5; i ++) {
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                //Tagged Pointer
-                [p2 personName:[NSString stringWithFormat:@"12345678+%d",i]];
-            });
+        
+        for (int i = 0; i < 10; i ++) {
+            @autoreleasepool {
+                NSString *str = [NSString stringWithFormat:@"%d",i];
+                NSMutableArray *tempA = [NSMutableArray array];
+                [tempA addObject:str];
+                
+                /*
+                 * 为什么运行环境不要写NSLog，内部执行复杂、耗时。
+                 * _NS_os_log_callback -> objc_autoreleasePoolPush 等等
+                **/
+//                NSLog(@" === %@",str);
+            }
         }
+        
+//        id __weak p2 = p1;
+//        for (int i = 0; i < 5; i ++) {
+//            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+//                //Tagged Pointer
+//                [p2 personName:[NSString stringWithFormat:@"12345678+%d",i]];
+//            });
+//        }
     }
     return 0;
 }
