@@ -1645,9 +1645,11 @@ typedef OBJC_ENUM(uintptr_t, objc_AssociationPolicy) {
 
 /** 
  * Sets an associated value for a given object using a given key and association policy.
- * 
- * @param object The source object for the association.
- * @param key The key for the association.
+ *
+ * 使用给定键和关联策略为给定对象设置关联值。
+ 
+ * @param object The source object for the association.        // 关联的源对象
+ * @param key The key for the association.                     // 给定的关联键
  * @param value The value to associate with the key key for object. Pass nil to clear an existing association.
  * @param policy The policy for the association. For possible values, see “Associative Object Behaviors.”
  * 

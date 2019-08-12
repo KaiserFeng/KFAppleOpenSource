@@ -247,6 +247,9 @@ struct header_info;
 // Split out the rw data from header info.  For now put it in a huge array
 // that more than exceeds the space needed.  In future we'll just allocate
 // this in the shared cache builder.
+/* 从头信息中分离RW数据。现在，把它放在一个巨大的超过所需的空间的数组中。
+ * 在将来，我们将只在共享缓存构建器中分配它。
+ */
 typedef struct header_info_rw {
 
     bool getLoaded() const {
@@ -291,10 +294,12 @@ typedef struct header_info {
 private:
     // Note, this is no longer a pointer, but instead an offset to a pointer
     // from this location.
+    // 偏移量
     intptr_t mhdr_offset;
 
     // Note, this is no longer a pointer, but instead an offset to a pointer
     // from this location.
+    // 偏移量
     intptr_t info_offset;
 
     // Do not add fields without editing ObjCModernAbstraction.hpp

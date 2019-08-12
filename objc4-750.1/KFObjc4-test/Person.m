@@ -23,7 +23,13 @@
     NSLog(@"%s",__FUNCTION__);
 }
 
++ (void)load {
+    
+}
+
+
 - (void)personName:(NSString *)arg1 {
+    NSLog(@"====%@",arg1);
     self.name = arg1;       // msg_send(self,"setName") -> objc_storeWeak(arg1, address)
 //    self.name = arg1;
 //    self.titleName = arg1;  // msg_send(self,"setTitleName") -> objc_setProperty_nonatomic_copy -> copyWithZone
