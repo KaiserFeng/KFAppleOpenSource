@@ -4326,6 +4326,7 @@ void registerObjCNotifiers(_dyld_objc_notify_mapped mapped, _dyld_objc_notify_in
 		ImageLoader* image = *it;
 		if ( (image->getState() == dyld_image_state_initialized) && image->notifyObjC() ) {
 			dyld3::ScopedTimer timer(DBG_DYLD_TIMING_OBJC_INIT, (uint64_t)image->machHeader(), 0, 0);
+			//函数指针 回调到 objc4 -> runtime中
 			(*sNotifyObjCInit)(image->getRealPath(), image->machHeader());
 		}
 	}
@@ -6205,7 +6206,7 @@ reloadAllImages:
 
 		// load any inserted libraries
 		//4、加载插入的动态库
-		//这个环境变量如何设置？
+		//这个环境变量如何设置？需要Root权限，因此手机需要越狱，正向开发使用不到这个属性，苹果开放这样的口子，可能是方便开发者程序debug
 		if	( sEnv.DYLD_INSERT_LIBRARIES != NULL ) {
 			for (const char* const* lib = sEnv.DYLD_INSERT_LIBRARIES; *lib != NULL; ++lib) 
 				loadInsertedDylib(*lib);

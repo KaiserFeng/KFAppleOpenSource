@@ -2380,6 +2380,8 @@ bool ImageLoaderMachO::doInitialization(const LinkContext& context)
 
 	// mach-o has -init and static initializers
 	doImageInit(context);
+	//加载 mach-o文件中的 __mod_init_func __DATA,  相当于构造函数
+	//目前没有用到过  有什么用呢？
 	doModInitFunctions(context);
 	
 	CRSetCrashLogMessage2(NULL);
