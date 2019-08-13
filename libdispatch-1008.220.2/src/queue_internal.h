@@ -152,7 +152,7 @@ DISPATCH_ENUM(dispatch_queue_flags, uint32_t,
  *    In other words that the queue has reached or overflown its capacity.
  */
 #define DISPATCH_QUEUE_WIDTH_FULL_BIT		0x0020000000000000ull
-#define DISPATCH_QUEUE_WIDTH_FULL			0x1000ull
+#define DISPATCH_QUEUE_WIDTH_FULL			0x1000ull   // 4096
 #define DISPATCH_QUEUE_WIDTH_POOL (DISPATCH_QUEUE_WIDTH_FULL - 1)
 #define DISPATCH_QUEUE_WIDTH_MAX  (DISPATCH_QUEUE_WIDTH_FULL - 2)
 #define DISPATCH_QUEUE_USES_REDIRECTION(width) \

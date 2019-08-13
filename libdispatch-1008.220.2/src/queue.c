@@ -2664,6 +2664,7 @@ _dispatch_lane_create_with_target(const char *label, dispatch_queue_attr_t dqa,
 
 	if (legacy) {
 		// if any of these attributes is specified, use non legacy classes
+		// 如果指定了这些属性中的任何一个，请使用非“遗产”类 what？
 		if (dqai.dqai_inactive || dqai.dqai_autorelease_frequency) {
 			legacy = false;
 		}
@@ -2692,6 +2693,7 @@ _dispatch_lane_create_with_target(const char *label, dispatch_queue_attr_t dqa,
 		}
 	}
 
+	// 开辟内存
 	dispatch_lane_t dq = _dispatch_object_alloc(vtable,
 			sizeof(struct dispatch_lane_s));
 	_dispatch_queue_init(dq, dqf, dqai.dqai_concurrent ?
@@ -2721,6 +2723,24 @@ dispatch_queue_create_with_target(const char *label, dispatch_queue_attr_t dqa,
 	return _dispatch_lane_create_with_target(label, dqa, tq, false);
 }
 
+/**
+ 创建新队列
+ 
+ *
+ * Creates a new dispatch queue to which blocks may be submitted.
+ *
+ * @param label
+ * A string label to attach to the queue.
+ * This parameter is optional and may be NULL.
+ *
+ * @param attr
+ * A predefined attribute such as DISPATCH_QUEUE_SERIAL,
+ * DISPATCH_QUEUE_CONCURRENT, or the result of a call to
+ * a dispatch_queue_attr_make_with_* function.
+ *
+ * @result
+ * The newly created dispatch queue.
+ */
 dispatch_queue_t
 dispatch_queue_create(const char *label, dispatch_queue_attr_t attr)
 {
