@@ -7,13 +7,15 @@
 
 #import <Foundation/Foundation.h>
 #import "Person.h"
+#import "Person+Social.h"
+#import <objc/message.h>
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
         Person *p1 = [[Person alloc] init];
         
-//        [p1 personName:@"123"];
-        [p1 personAddress:@"456"];
+        [p1 personName:@"123"];
+//        [p1 personAddress:@"456"];
 //        [p1 runTests];
         
         

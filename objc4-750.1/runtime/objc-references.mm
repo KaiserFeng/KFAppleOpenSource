@@ -194,6 +194,8 @@ spinlock_t AssociationsManagerLock;
 
 class AssociationsManager {
     // associative references: object pointer -> PtrPtrHashMap.
+    // 把所有对象的关联对象都存在一个全局map里面。而map的的key是这个对象的指针地址（任意两个不同对象的指针地址一定是不同的），
+    // 而这个map的value又是另外一个AssociationsHashMap，里面保存了关联对象的kv对。
     static AssociationsHashMap *_map;
 public:
     AssociationsManager()   { AssociationsManagerLock.lock(); }

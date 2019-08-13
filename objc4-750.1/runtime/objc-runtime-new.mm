@@ -488,6 +488,8 @@ static bool isKnownClass(Class cls) {
 * Add a class to the table of all classes. If addMeta is true,
 * automatically adds the metaclass of the class as well.
 * Locking: runtimeLock must be held by the caller.
+* 向所有类的表中添加一个类。如果addMeta为true，也会自动添加类的元类。
+* 即 向类表中添加类
 **********************************************************************/
 static void addClassTableEntry(Class cls, bool addMeta = true) {
     runtimeLock.assertLocked();
@@ -520,6 +522,8 @@ static void checkIsKnownClass(Class cls)
 * addUnattachedCategoryForClass
 * Records an unattached category.
 * Locking: runtimeLock must be held by the caller.
+ 
+* 记录一个未附加的类别
 **********************************************************************/
 static void addUnattachedCategoryForClass(category_t *cat, Class cls, 
                                           header_info *catHeader)
@@ -530,6 +534,10 @@ static void addUnattachedCategoryForClass(category_t *cat, Class cls,
     NXMapTable *cats = unattachedCategories();
     category_list *list;
 
+    const char * clsn = object_getClassName(cls);
+    if (!strcmp(clsn, "Person")) {
+        _objc_inform("1234567890 addUnattachedCategoryForClass %s",object_getClassName(cls));
+    }
     list = (category_list *)NXMapGet(cats, cls);
     if (!list) {
         list = (category_list *)
@@ -556,6 +564,10 @@ static void removeUnattachedCategoryForClass(category_t *cat, Class cls)
     NXMapTable *cats = unattachedCategories();
     category_list *list;
 
+    const char * clsn = object_getClassName(cls);
+    if (!strcmp(clsn, "Person")) {
+        _objc_inform("1234567890 removeUnattachedCategoryForClass %s",object_getClassName(cls));
+    }
     list = (category_list *)NXMapGet(cats, cls);
     if (!list) return;
 
@@ -578,11 +590,17 @@ static void removeUnattachedCategoryForClass(category_t *cat, Class cls)
 * deletes them from the list. 
 * The result must be freed by the caller. 
 * Locking: runtimeLock must be held by the caller.
+ 
+* 返回一个类的未附加分类列表，并从列表中删除
 **********************************************************************/
 static category_list *
 unattachedCategoriesForClass(Class cls, bool realizing)
 {
     runtimeLock.assertLocked();
+    const char * clsn = object_getClassName(cls);
+    if (!strcmp(clsn, "Person")) {
+        _objc_inform("1234567890 unattachedCategoriesForClass %s",object_getClassName(cls));
+    }
     return (category_list *)NXMapRemove(unattachedCategories(), cls);
 }
 
@@ -621,6 +639,10 @@ static Class classNSObject(void)
 **********************************************************************/
 static void printReplacements(Class cls, category_list *cats)
 {
+    const char * clsn = object_getClassName(cls);
+    if (!strcmp(clsn, "Person")) {
+        _objc_inform("1234567890 printReplacements %s",object_getClassName(cls));
+    }
     uint32_t c;
     bool isMeta = cls->isMetaClass();
 
@@ -733,6 +755,7 @@ prepareMethodLists(Class cls, method_list_t **addedLists, int addedCount,
     // Add method lists to array.
     // Reallocate un-fixed method lists.
     // The new methods are PREPENDED to the method list array.
+    // 新方法被添加到方法列表数组中。
 
     for (int i = 0; i < addedCount; i++) {
         method_list_t *mlist = addedLists[i];
@@ -759,9 +782,23 @@ prepareMethodLists(Class cls, method_list_t **addedLists, int addedCount,
 // Attach method lists and properties and protocols from categories to a class.
 // Assumes the categories in cats are all loaded and sorted by load order, 
 // oldest categories first.
+
+/*
+ * 将category中的方法列表、属性以及协议附加到一个类中。
+ * 假设在cats的类别都是由load order加载和排序的，最早的类别首先。
+ * 需要注意的有两点：
+ 
+1)、category的方法没有“完全替换掉”原来类已经有的方法，也就是说如果category和原来类都有methodA，那么category附加完成之后，类的方法列表里会有两个methodA
+ 
+ 2)、category的方法被放到了新方法列表的前面，而原来类的方法被放到了新方法列表的后面，这也就是我们平常所说的category的方法会“覆盖”掉原来类的同名方法，这是因为运行时在查找方法的时候是顺着方法列表的顺序查找的，它只要一找到对应名字的方法，就会罢休^_^，殊不知后面可能还有一样名字的方法。（商榷）
+ */
 static void 
 attachCategories(Class cls, category_list *cats, bool flush_caches)
 {
+    const char * clsn = object_getClassName(cls);
+    if (!strcmp(clsn, "Person")) {
+        _objc_inform("1234567890 attachCategories %s",object_getClassName(cls));
+    }
     if (!cats) return;
     if (PrintReplacedMethods) printReplacements(cls, cats);
 
@@ -862,6 +899,11 @@ static void methodizeClass(Class cls)
     }
 
     // Attach categories.
+    // 这个地方获取category 得到的结果为NULL
+    const char * clsn = object_getClassName(cls);
+    if (!strcmp(clsn, "Person")) {
+        _objc_inform("1234567890 methodizeClass %s",object_getClassName(cls));
+    }
     category_list *cats = unattachedCategoriesForClass(cls, true /*realizing*/);
     attachCategories(cls, cats, false /*don't flush caches*/);
 
@@ -896,9 +938,17 @@ static void methodizeClass(Class cls)
 * Fixes up cls's method list, protocol list, and property list.
 * Updates method caches for cls and its subclasses.
 * Locking: runtimeLock must be held by the caller
+ 
+* 将未附加的 category 附加到一个现有的类上。
+* 修正类的方法列表、协议列表以及属性列表。
+* 更新类及其自类的方法缓存
 **********************************************************************/
 static void remethodizeClass(Class cls)
 {
+    const char * clsn = object_getClassName(cls);
+    if (!strcmp(clsn, "Person")) {
+        _objc_inform("1234567890 remethodizeClass %s",object_getClassName(cls));
+    }
     category_list *cats;
     bool isMeta;
 
@@ -1854,6 +1904,9 @@ static void reconcileInstanceVariables(Class cls, Class supercls, const class_ro
 * including allocating its read-write data.
 * Returns the real class structure for the class. 
 * Locking: runtimeLock must be write-locked by the caller
+ 
+* 在class cls上执行首次初始化，包括分配其读写数据
+* 返回这个class的真实类结构
 **********************************************************************/
 static Class realizeClass(Class cls)
 {
@@ -2153,6 +2206,7 @@ void _objc_flush_caches(Class cls)
 * Calls ABI-agnostic code after taking ABI-specific locks.
 *
 * Locking: write-locks runtimeLock
+* 对DYLD正在映射的给定镜像进行处理。
 **********************************************************************/
 void
 map_images(unsigned count, const char * const paths[],
@@ -2168,6 +2222,15 @@ map_images(unsigned count, const char * const paths[],
 * Process +load in the given images which are being mapped in by dyld.
 *
 * Locking: write-locks runtimeLock and loadMethodLock
+* 处理被dyld映射进来的镜像内的 +load 方法，每个镜像都会有此回调
+* 流程：
+*    1.快速查询类中是否有load方法,没有直接return；
+*    2.准备工作：
+*      (a)将class +load方法加入add_class_to_loadable_list;
+*      (b)将category +load方法加入add_category_to_loadable_list;
+*    3.开始调用load方法：
+*      (a)优先调用 call_class_loads()
+*      (b)再调用 call_category_loads()
 **********************************************************************/
 extern bool hasLoadMethods(const headerType *mhdr);
 extern void prepare_load_methods(const headerType *mhdr);
@@ -2196,6 +2259,7 @@ load_images(const char *path __unused, const struct mach_header *mh)
 * Process the given image which is about to be unmapped by dyld.
 *
 * Locking: write-locks runtimeLock and loadMethodLock
+* 处理即将被DYLD取消映射的给定镜像。
 **********************************************************************/
 void 
 unmap_image(const char *path __unused, const struct mach_header *mh)
@@ -2266,6 +2330,12 @@ bool mustReadClasses(header_info *hi)
 * mustReadClasses(). Do not change this function without updating that one.
 *
 * Locking: runtimeLock acquired by map_images or objc_readClassPair
+ 
+* 读取编译器编写的类和元类。
+* 返回新的类指针。这可能是：
+* - cls
+* - nil
+* - 其他
 **********************************************************************/
 Class readClass(Class cls, bool headerIsBundle, bool headerIsPreoptimized)
 {
@@ -2444,9 +2514,12 @@ readProtocol(protocol_t *newproto, Class protocol_class,
 * Called by: map_images_nolock
 *
 * Locking: runtimeLock acquired by map_images
+*
+* 对链表中以headerList开头的头进行初始处理。
 **********************************************************************/
 void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int unoptimizedTotalClasses)
 {
+    // 头部信息 结构体
     header_info *hi;
     uint32_t hIndex;
     size_t count;
@@ -2541,7 +2614,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
 
 
     // Discover classes. Fix up unresolved future classes. Mark bundle classes.
-
+    // 发现 类
     for (EACH_HEADER) {
         classref_t *classlist = _getObjc2ClassList(hi, &count);
         
@@ -2555,6 +2628,8 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
 
         for (i = 0; i < count; i++) {
             Class cls = (Class)classlist[i];
+//            const char * cln =  object_getClassName(cls);
+//            _objc_inform("cln == %s\n",cln);
             Class newCls = readClass(cls, headerIsBundle, headerIsPreoptimized);
 
             if (newCls != cls  &&  newCls) {
@@ -2629,6 +2704,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
 #endif
 
     // Discover protocols. Fix up protocol refs.
+    // 发现 协议
     for (EACH_HEADER) {
         extern objc_class OBJC_CLASS_$_Protocol;
         Class cls = (Class)&OBJC_CLASS_$_Protocol;
@@ -2659,6 +2735,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
     ts.log("IMAGE TIMES: fix up @protocol references");
 
     // Realize non-lazy classes (for +load methods and static instances)
+    // 实现非懒加载类
     for (EACH_HEADER) {
         classref_t *classlist = 
             _getObjc2NonlazyClassList(hi, &count);
@@ -2681,8 +2758,9 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
                 cls->ISA()->cache._occupied = 0;
             }
 #endif
-            
+            //将类加入类表中
             addClassTableEntry(cls);
+            // 得到一个类结构
             realizeClass(cls);
         }
     }
@@ -2700,7 +2778,10 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
 
     ts.log("IMAGE TIMES: realize future classes");
 
-    // Discover categories. 
+    // Discover categories.
+    // 发现分类
+    // 分类是运行期，基类是编译期。
+    // 分类是动态加载的
     for (EACH_HEADER) {
         category_t **catlist = 
             _getObjc2CategoryList(hi, &count);
@@ -2710,6 +2791,10 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
             category_t *cat = catlist[i];
             Class cls = remapClass(cat->cls);
 
+            const char * clsn = object_getClassName(cls);
+            if (!strcmp(clsn, "Person")) {
+                _objc_inform("1234567890== _read_images %s",object_getClassName(cls));
+            }
             if (!cls) {
                 // Category's target class is missing (probably weak-linked).
                 // Disavow any knowledge of this category.
@@ -2725,13 +2810,22 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
             // Process this category. 
             // First, register the category with its target class. 
             // Then, rebuild the class's method lists (etc) if 
-            // the class is realized. 
+            // the class is realized.
+            
+            /*
+             * 处理这个 分类
+             * 1、用目标类注册类别
+             * 2、如果类已经实现了，则重新构建类的方法列表等等
+             */
             bool classExists = NO;
-            if (cat->instanceMethods ||  cat->protocols  
+            // 实例 把category 的实例方法、协议以及属性添加到类上
+            if (cat->instanceMethods ||  cat->protocols
                 ||  cat->instanceProperties) 
             {
+                // 将 类与category 做一个关联映射
                 addUnattachedCategoryForClass(cat, cls, hi);
                 if (cls->isRealized()) {
+                    // 处理添加事宜
                     remethodizeClass(cls);
                     classExists = YES;
                 }
@@ -2742,6 +2836,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
                 }
             }
 
+            //类 把category 的类方法、协议以及类属性添加到类上
             if (cat->classMethods  ||  cat->protocols  
                 ||  (hasClassProperties && cat->_classProperties)) 
             {
@@ -2855,6 +2950,7 @@ static void schedule_class_load(Class cls)
 }
 
 // Quick scan for +load methods that doesn't take a lock.
+// 快速浏览 +load方法，不需要加锁
 bool hasLoadMethods(const headerType *mhdr)
 {
     size_t count;
@@ -2863,6 +2959,7 @@ bool hasLoadMethods(const headerType *mhdr)
     return false;
 }
 
+// 准备 load
 void prepare_load_methods(const headerType *mhdr)
 {
     size_t count, i;
@@ -2872,6 +2969,7 @@ void prepare_load_methods(const headerType *mhdr)
     classref_t *classlist = 
         _getObjc2NonlazyClassList(mhdr, &count);
     for (i = 0; i < count; i++) {
+        // 调度class load
         schedule_class_load(remapClass(classlist[i]));
     }
 
@@ -2891,6 +2989,7 @@ void prepare_load_methods(const headerType *mhdr)
 * _unload_image
 * Only handles MH_BUNDLE for now.
 * Locking: write-lock and loadMethodLock acquired by unmap_image
+* 现在只处理 MH_BUNDLE
 **********************************************************************/
 void _unload_image(header_info *hi)
 {
@@ -2906,10 +3005,16 @@ void _unload_image(header_info *hi)
         category_t *cat = catlist[i];
         if (!cat) continue;  // category for ignored weak-linked class
         Class cls = remapClass(cat->cls);
+        const char * clsn = object_getClassName(cls);
+        _objc_inform("1234567890 _unload_image %s",object_getClassName(cls));
+        if (!strcmp(clsn, "Person")) {
+            
+        }
         assert(cls);  // shouldn't have live category for dead class
 
         // fixme for MH_DYLIB cat's class may have been unloaded already
 
+        //‘移除操作
         // unattached list
         removeUnattachedCategoryForClass(cat, cls);
 
@@ -4841,7 +4946,7 @@ log_and_fill_cache(Class cls, IMP imp, SEL sel, id receiver, Class implementer)
 IMP _class_lookupMethodAndLoadCache3(id obj, SEL sel, Class cls)
 {
 //    if (cls && cls->data() && cls->data()->ro->name) {
-        _objc_inform("1、==== %s\n",sel_getName(sel));
+//        _objc_inform("1、==== %s\n",sel_getName(sel));
 //    }
     
     return lookUpImpOrForward(cls, sel, obj, 
@@ -6343,6 +6448,8 @@ Class objc_readClassPair(Class bits, const struct objc_image_info *info)
 * Exception: does not remove the class from the +load list
 * Call this before free_class.
 * Locking: runtimeLock must be held by the caller.
+* 从其他的数据结构中断开一个类
+* 例外：不从+load列表中移除类 在FreeClass类之前调用它。
 **********************************************************************/
 static void detach_class(Class cls, bool isMeta)
 {
@@ -6654,6 +6761,7 @@ void *objc_destructInstance(id obj)
     if (obj) {
         // Read all of the flags at once for performance.
         bool cxx = obj->hasCxxDtor();
+        // 如果这个对象有关联对象，在对象销毁的时候做关联对象的清除动作 _object_remove_assocations
         bool assoc = obj->hasAssociatedObjects();
 
         // This order is important.

@@ -866,6 +866,7 @@ dispatch_queue_attr_make_with_qos_class(dispatch_queue_attr_t _Nullable attr,
  * dispatch_set_target_queue() and dispatch_source_create() functions to
  * indicate that the default target queue for the object type in question
  * should be used.
+ * 常量传递到以上函数，以指示应该使用该对象类型的默认目标队列。
  */
 #define DISPATCH_TARGET_QUEUE_DEFAULT NULL
 
@@ -947,6 +948,9 @@ dispatch_queue_create_with_target(const char *_Nullable label,
  * dispatch_release(). Note that any pending blocks submitted asynchronously to
  * a queue will hold a reference to that queue. Therefore a queue will not be
  * deallocated until all pending blocks have finished.
+ * (当不再需要调度队列时，应该使用DISPATCH_RELEASE()释放它。
+ * 请注意，异步提交到队列的任何挂起块都将保存对该队列的引用。
+ * 因此，在所有挂起块完成之前，队列将不会被解除分配。)
  *
  * Passing the result of the dispatch_queue_attr_make_with_qos_class() function
  * to the attr parameter of this function allows a quality of service class and
@@ -957,6 +961,9 @@ dispatch_queue_create_with_target(const char *_Nullable label,
  *
  * When no quality of service class is specified, the target queue of a newly
  * created dispatch queue is the default priority global concurrent queue.
+ *（通过查看 dispatch_queue_attr_make_with_qos_class() 函数的attr参数，该函数允许一定量的服务类以及为新创建的队列指定相对优先级。因此，指定的服务类的质量优先于新创建的调度队列的目标队列（如果有的话）的服务类的质量，因为它不会导致低QoS级别和相对优先级。
+    当没有指定服务类的质量时，
+    新创建的调度队列的目标队列是默认优先级的全局并行队列。）
  *
  * @param label
  * A string label to attach to the queue.

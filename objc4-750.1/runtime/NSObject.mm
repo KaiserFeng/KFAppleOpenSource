@@ -2038,6 +2038,7 @@ id objc_unretainedObject(objc_objectptr_t pointer) { return (id)pointer; }
 objc_objectptr_t objc_unretainedPointer(id object) { return object; }
 
 
+// read-image 第一次初始化
 void arr_init(void) 
 {
     AutoreleasePoolPage::init();

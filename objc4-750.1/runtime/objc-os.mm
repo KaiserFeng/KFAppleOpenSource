@@ -436,6 +436,11 @@ static bool shouldRejectGCImage(const headerType *mhdr)
 #include "objc-file-old.h"
 #endif
 
+/*
+ * mhCount ****???
+ * mhPaths[] macho 文件路径
+ * mhdrs[] ***???
+ */
 void 
 map_images_nolock(unsigned mhCount, const char * const mhPaths[],
                   const struct mach_header * const mhdrs[])
@@ -519,7 +524,8 @@ map_images_nolock(unsigned mhCount, const char * const mhPaths[],
     // is dynamically loaded later.
     
     /*
-        直到找到可执行文件，才能执行一次runtime初始化。这需要在进一步初始化之前完成。（如果可执行文件不包含Objective-C代码，但Objective-C稍后会动态加载，则可执行文件可能不会出现在这个Infolist中。
+     * 直到找到可执行文件，才能执行一次runtime初始化。这需要在进一步初始化之前完成。
+     *（如果可执行文件不包含Objective-C代码，但Objective-C稍后会动态加载，则可执行文件可能不会出现在这个Infolist中。
      */
     if (firstTime) {
         sel_init(selrefCount);
@@ -878,17 +884,20 @@ void _objc_atfork_child()
 
 void _objc_init(void)
 {
+    // 写的有毛病哦！！！
     static bool initialized = false;
     if (initialized) return;
     initialized = true;
     
     // fixme defer initialization until an objc-using image is found?
     environ_init();
+    // thread local store 线程局部存储。有什么左作用呢？？？
     tls_init();
     static_init();
     lock_init();
     exception_init();
 
+    // 注册监听回调
     _dyld_objc_notify_register(&map_images, load_images, unmap_image);
 }
 

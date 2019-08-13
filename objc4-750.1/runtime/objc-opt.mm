@@ -345,6 +345,7 @@ header_info_rw *getPreoptimizedHeaderRW(const struct header_info *const hdr)
 void preopt_init(void)
 {
     // Get the memory region occupied by the shared cache.
+    // 获取共享缓存所占用的内存区域。
     size_t length;
     const void *start = _dyld_get_shared_cache_range(&length);
     if (start) {
@@ -387,6 +388,7 @@ void preopt_init(void)
     }
     else {
         // Valid optimization data written by dyld shared cache
+        // DYLD共享缓存写入的有效优化数据
         preoptimized = YES;
 
         if (PrintPreopt) {
