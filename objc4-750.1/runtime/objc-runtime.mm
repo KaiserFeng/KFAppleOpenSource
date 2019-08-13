@@ -427,7 +427,7 @@ void _objc_pthread_destroyspecific(void *arg)
     }
 }
 
-
+// thread local store 线程局部存储。有什么左作用呢？？？
 void tls_init(void)
 {
 #if SUPPORT_DIRECT_THREAD_KEYS

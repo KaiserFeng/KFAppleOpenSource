@@ -41,6 +41,7 @@ static SEL search_builtins(const char *key);
 /***********************************************************************
 * sel_init
 * Initialize selector tables and register selectors used internally.
+* 初始化选择器表和寄存器选择器以供内部使用。
 **********************************************************************/
 void sel_init(size_t selrefCount)
 {

@@ -24,7 +24,7 @@
 }
 
 + (void)load {
-    
+    NSLog(@"current load!!!");
 }
 
 

@@ -10,7 +10,7 @@
 @implementation Person (Sports)
 
 + (void)load {
-    
+    NSLog(@"current Sports load!!!");
 }
 
 @end

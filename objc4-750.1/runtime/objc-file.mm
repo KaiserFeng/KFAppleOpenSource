@@ -46,6 +46,7 @@ T* getDataSection(const headerType *mhdr, const char *sectname,
     return data;
 }
 
+// 读取macho header还是 data部分？
 #define GETSECT(name, type, sectname)                                   \
     type *name(const headerType *mhdr, size_t *outCount) {              \
         return getDataSection<type>(mhdr, sectname, nil, outCount);     \
