@@ -1141,6 +1141,7 @@ _dispatch_queue_init(dispatch_queue_class_t dqu, dispatch_queue_flags_t dqf,
 	dq_state |= (initial_state_bits & DISPATCH_QUEUE_ROLE_MASK);
 	dq->do_next = DISPATCH_OBJECT_LISTLESS;
 	dqf |= DQF_WIDTH(width);
+	// dqf 保存进 dq->dq_atomic_flags
 	os_atomic_store2o(dq, dq_atomic_flags, dqf, relaxed);
 	dq->dq_state = dq_state;
 	dq->dq_serialnum =
@@ -1871,6 +1872,7 @@ _dispatch_get_root_queue(dispatch_qos_t qos, bool overcommit)
 	if (unlikely(qos < DISPATCH_QOS_MIN || qos > DISPATCH_QOS_MAX)) {
 		DISPATCH_CLIENT_CRASH(qos, "Corrupted priority");
 	}
+	// 从一个队列数组中取值 serials 4 - 15 12个root队列。又可以分6组，每组包含是不是过载队列。
 	return &_dispatch_root_queues[2 * (qos - 1) + overcommit];
 }
 
@@ -2503,6 +2505,9 @@ _dispatch_continuation_pop_inline(dispatch_object_t dou,
 		} \
 	})
 
+/*
+ *  设置默认任务优先级
+ */
 DISPATCH_ALWAYS_INLINE
 static inline dispatch_qos_t
 _dispatch_continuation_priority_set(dispatch_continuation_t dc,
@@ -2542,6 +2547,7 @@ _dispatch_continuation_init_f(dispatch_continuation_t dc,
 	pthread_priority_t pp = 0;
 	dc->dc_flags = dc_flags | DC_FLAG_ALLOCATED;
 	dc->dc_func = f;
+	// block对象赋值到 dc_ctxt
 	dc->dc_ctxt = ctxt;
 	// in this context DISPATCH_BLOCK_HAS_PRIORITY means that the priority
 	// should not be propagated, only taken from the handler if it has one
@@ -2549,6 +2555,7 @@ _dispatch_continuation_init_f(dispatch_continuation_t dc,
 		pp = _dispatch_priority_propagate();
 	}
 	_dispatch_continuation_voucher_set(dc, flags);
+	// 设置默认任务优先级
 	return _dispatch_continuation_priority_set(dc, dqu, pp, flags);
 }
 
@@ -2558,11 +2565,13 @@ _dispatch_continuation_init(dispatch_continuation_t dc,
 		dispatch_queue_class_t dqu, dispatch_block_t work,
 		dispatch_block_flags_t flags, uintptr_t dc_flags)
 {
+	// copy block
 	void *ctxt = _dispatch_Block_copy(work);
 
 	dc_flags |= DC_FLAG_BLOCK | DC_FLAG_ALLOCATED;
 	if (unlikely(_dispatch_block_has_private_data(work))) {
 		dc->dc_flags = dc_flags;
+		// block对象赋值到 dc_ctxt
 		dc->dc_ctxt = ctxt;
 		// will initialize all fields but requires dc_flags & dc_ctxt to be set
 		return _dispatch_continuation_init_slow(dc, dqu, flags);
@@ -2570,11 +2579,24 @@ _dispatch_continuation_init(dispatch_continuation_t dc,
 
 	dispatch_function_t func = _dispatch_Block_invoke(work);
 	if (dc_flags & DC_FLAG_CONSUME) {
+		// _dispatch_call_block_and_release 是一个函数指针，内部直接执行block
+		// _dispatch_call_block_and_release 赋值给 func！
+		// 当 func被调用的时候，block就执行了
 		func = _dispatch_call_block_and_release;
 	}
 	return _dispatch_continuation_init_f(dc, dqu, ctxt, func, flags, dc_flags);
 }
 
+
+/**
+ 异步将任务push到队列中
+
+ @param dqu <#dqu description#>
+ @param dc <#dc description#>
+ @param qos 优先级
+ @param dc_flags <#dc_flags description#>
+ @return <#return value description#>
+ */
 DISPATCH_ALWAYS_INLINE
 static inline void
 _dispatch_continuation_async(dispatch_queue_class_t dqu,
@@ -2587,6 +2609,7 @@ _dispatch_continuation_async(dispatch_queue_class_t dqu,
 #else
 	(void)dc_flags;
 #endif
+	// 将任务push到队列
 	return dx_push(dqu._dq, dc, qos);
 }
 

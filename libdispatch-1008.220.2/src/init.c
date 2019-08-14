@@ -410,6 +410,13 @@ extern struct dispatch_queue_attr_s _dispatch_queue_attr_concurrent
 	__attribute__((__alias__("_dispatch_queue_attrs")));
 #endif
 
+
+/**
+ <#Description#>
+
+ @param dqa DISPATCH_QUEUE_SERIAL or DISPATCH_QUEUE_CONCURRENT
+ @return dispatch_queue_attr_info_t
+ */
 dispatch_queue_attr_info_t
 _dispatch_queue_attr_to_info(dispatch_queue_attr_t dqa)
 {
@@ -655,6 +662,15 @@ DISPATCH_VTABLE_INSTANCE(workloop,
 	.dq_push        = _dispatch_workloop_push,
 );
 
+/*
+ * viable的串行对象
+ * do_dispose 销毁函数
+ * do_invoke 调用函数
+ * dq_activate 激活函数
+ * dq_wakeup 唤醒函数
+ * dq_push push函数，push block任务到队列，就是dq_push的功劳
+ *
+ */
 DISPATCH_VTABLE_SUBCLASS_INSTANCE(queue_serial, lane,
 	.do_type        = DISPATCH_QUEUE_SERIAL_TYPE,
 	.do_dispose     = _dispatch_lane_dispose,
@@ -1279,6 +1295,7 @@ _dispatch_calloc(size_t num_items, size_t size)
 /**
  * If the source string is mutable, allocates memory and copies the contents.
  * Otherwise returns the source string.
+ * 如果源是可变的，开辟内存并复制源，否则直接返回源
  */
 const char *
 _dispatch_strdup_if_mutable(const char *str)
@@ -1294,7 +1311,17 @@ _dispatch_strdup_if_mutable(const char *str)
 	}
 	return str;
 #else
-	return strdup(str);
+	/*
+	 * strdup是先调用malloc动态为一个未初始化的指针分配内存，
+	 * 然后再用strcpy将字符串复制进这个指针中（malloc+strcpy）
+	 * strcpy是将一个字符串放进已经分配内存的指针中
+	 * strdup要进行free。strcpy不需要进行free
+	 *
+	 * strdup比strcpy更加安全
+	 * 前者先用malloc为新指针申请了一个与希望复制的字符串相同大小的空间，这样在复制的时候就不存在溢出。
+	 * strcpy有可能前面部分的指针指向的内存不够字符串大小，则会在复制的时候修改相应的内存，这样就相当不安全。
+	 */
+	return strdup(str);  // 字符串拷贝函数，深拷贝。
 #endif
 }
 

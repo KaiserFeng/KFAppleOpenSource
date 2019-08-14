@@ -882,12 +882,14 @@ typedef struct dispatch_queue_attr_info_s {
 	uint16_t dqai_concurrent:1;
 	uint16_t dqai_inactive:1;
 } dispatch_queue_attr_info_t;
+//typedef 给 struct dispatch_queue_attr_info_s 取别名 dispatch_queue_attr_info_t
 
 typedef enum {
 	_dispatch_queue_attr_overcommit_unspecified = 0,
 	_dispatch_queue_attr_overcommit_enabled,
 	_dispatch_queue_attr_overcommit_disabled,
 } _dispatch_queue_attr_overcommit_t;
+// _dispatch_queue_attr_overcommit_t 一个枚举
 
 #define DISPATCH_QUEUE_ATTR_OVERCOMMIT_COUNT 3
 
@@ -916,6 +918,11 @@ dispatch_queue_attr_info_t _dispatch_queue_attr_to_info(dispatch_queue_attr_t);
 
 #pragma mark -
 #pragma mark dispatch_continuation_t
+
+/*
+ * dispatch_continuation_t 用来封装block对象的，保存block上下文环境和block执行函数等
+ * dispatch_function_t 只是一个函数指针。typedef void (*dispatch_function_t)(void *);
+ */
 
 // If dc_flags is less than 0x1000, then the object is a continuation.
 // Otherwise, the object has a private layout and memory management rules. The

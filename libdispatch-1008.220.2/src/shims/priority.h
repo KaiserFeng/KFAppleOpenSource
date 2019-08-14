@@ -22,6 +22,7 @@
  * IMPORTANT: This header file describes INTERNAL interfaces to libdispatch
  * which are subject to change in future releases of Mac OS X. Any applications
  * relying on these interfaces WILL break.
+ * 优先级/优先次序
  */
 
 #ifndef __DISPATCH_SHIMS_PRIORITY__
@@ -70,19 +71,21 @@ typedef unsigned long pthread_priority_t;
 
 #endif // HAVE_PTHREAD_QOS_H
 
+// typedef 给 uint32_t 取别名 dispatch_qos_t
 typedef uint32_t dispatch_qos_t;
 typedef uint32_t dispatch_priority_t;
 
-#define DISPATCH_QOS_UNSPECIFIED        ((dispatch_qos_t)0)
-#define DISPATCH_QOS_MAINTENANCE        ((dispatch_qos_t)1)
-#define DISPATCH_QOS_BACKGROUND         ((dispatch_qos_t)2)
-#define DISPATCH_QOS_UTILITY            ((dispatch_qos_t)3)
-#define DISPATCH_QOS_DEFAULT            ((dispatch_qos_t)4)
-#define DISPATCH_QOS_USER_INITIATED     ((dispatch_qos_t)5)
-#define DISPATCH_QOS_USER_INTERACTIVE   ((dispatch_qos_t)6)
-#define DISPATCH_QOS_MIN                DISPATCH_QOS_MAINTENANCE
-#define DISPATCH_QOS_MAX                DISPATCH_QOS_USER_INTERACTIVE
-#define DISPATCH_QOS_SATURATED          ((dispatch_qos_t)15)
+// Qos 优先级
+#define DISPATCH_QOS_UNSPECIFIED        ((dispatch_qos_t)0)            // unspecified 未指定
+#define DISPATCH_QOS_MAINTENANCE        ((dispatch_qos_t)1)            // maintenance 维护/保持
+#define DISPATCH_QOS_BACKGROUND         ((dispatch_qos_t)2)            // background  后台
+#define DISPATCH_QOS_UTILITY            ((dispatch_qos_t)3)            // utility  多用
+#define DISPATCH_QOS_DEFAULT            ((dispatch_qos_t)4)            // default  默认 4
+#define DISPATCH_QOS_USER_INITIATED     ((dispatch_qos_t)5)            // user_initiated  用户发起
+#define DISPATCH_QOS_USER_INTERACTIVE   ((dispatch_qos_t)6)            // user_interactive  用户相互的
+#define DISPATCH_QOS_MIN                DISPATCH_QOS_MAINTENANCE       // min  最小 1
+#define DISPATCH_QOS_MAX                DISPATCH_QOS_USER_INTERACTIVE  // max  最大 6
+#define DISPATCH_QOS_SATURATED          ((dispatch_qos_t)15)           // saturated  饱和
 
 #define DISPATCH_QOS_NBUCKETS           (DISPATCH_QOS_MAX - DISPATCH_QOS_MIN + 1)
 #define DISPATCH_QOS_BUCKET(qos)        ((qos) - DISPATCH_QOS_MIN)

@@ -51,6 +51,11 @@
 		atomic_store_explicit(_os_atomic_c11_atomic(p), v, memory_order_##m)
 #define os_atomic_xchg(p, v, m) \
 		atomic_exchange_explicit(_os_atomic_c11_atomic(p), v, memory_order_##m)
+/*
+ * 第二个参数与第一个参数值比较，
+ * 如果相等，第三个参数的值替换第一个参数的值。
+ * 如果不相等，把第一个参数的值赋值到第二个参数上
+ */
 #define os_atomic_cmpxchg(p, e, v, m) \
 		({ _os_atomic_basetypeof(p) _r = (e); \
 		atomic_compare_exchange_strong_explicit(_os_atomic_c11_atomic(p), \
@@ -102,6 +107,9 @@
 
 #define os_atomic_load2o(p, f, m) \
 		os_atomic_load(&(p)->f, m)
+/*
+ * 将第二个参数保存到第一个参数
+ */
 #define os_atomic_store2o(p, f, v, m) \
 		os_atomic_store(&(p)->f, (v), m)
 #define os_atomic_xchg2o(p, f, v, m) \
@@ -135,6 +143,9 @@
 
 #define os_atomic_inc(p, m) \
 		os_atomic_add((p), 1, m)
+/*
+ * 将1保存到第一个参数中
+ */
 #define os_atomic_inc_orig(p, m) \
 		os_atomic_add_orig((p), 1, m)
 #define os_atomic_inc2o(p, f, m) \

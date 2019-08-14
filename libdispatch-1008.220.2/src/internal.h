@@ -417,6 +417,15 @@ DISPATCH_EXPORT DISPATCH_NOTHROW void dispatch_atfork_child(void);
 #define NSEC_PER_USEC 1000ull
 
 #if __GNUC__
+/*
+ * 编译器优化函数
+ *
+ * __builtin_expect第一个参数是实际值，第二个参数是预测值。
+ * 这样的目的是告诉编译器if条件式是不是有更大的可能被满足。
+ 
+ * likely 表示更大可能成立
+ * unlikely 表示更大可能不成立
+ */
 #define likely(x) __builtin_expect(!!(x), 1)
 #define unlikely(x) __builtin_expect(!!(x), 0)
 #else

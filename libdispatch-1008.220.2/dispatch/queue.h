@@ -735,17 +735,20 @@ dispatch_queue_attr_make_initially_inactive(
  * @const DISPATCH_AUTORELEASE_FREQUENCY_INHERIT
  * Dispatch queues with this autorelease frequency inherit the behavior from
  * their target queue. This is the default behavior for manually created queues.
+ * 此自动释放频率的调度队列从目标队列继承行为。这是手动创建队列的默认行为。
  *
  * @const DISPATCH_AUTORELEASE_FREQUENCY_WORK_ITEM
  * Dispatch queues with this autorelease frequency push and pop an autorelease
  * pool around the execution of every block that was submitted to it
  * asynchronously.
  * @see dispatch_queue_attr_make_with_autorelease_frequency().
+ * 此自动释放频率的调度队列给在异步提交给它的每个块的执行周围推送以及弹出一个自动释放池。
  *
  * @const DISPATCH_AUTORELEASE_FREQUENCY_NEVER
  * Dispatch queues with this autorelease frequency never set up an individual
  * autorelease pool around the execution of a block that is submitted to it
  * asynchronously. This is the behavior of the global concurrent queues.
+ * 此自动释放频率的调度队列从来不会给他执行的一个异步提交的块周围设置一个单独的自动释放池。这是全局并发队列的行为。
  */
 DISPATCH_ENUM(dispatch_autorelease_frequency, unsigned long,
 	DISPATCH_AUTORELEASE_FREQUENCY_INHERIT DISPATCH_ENUM_API_AVAILABLE(macos(10.12), ios(10.0), tvos(10.0), watchos(3.0)) = 0,

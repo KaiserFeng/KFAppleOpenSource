@@ -140,6 +140,10 @@ _os_object_allows_weak_reference(_os_object_t obj)
 void *
 _dispatch_object_alloc(const void *vtable, size_t size)
 {
+	/*
+	 * OS_OBJECT_HAVE_OBJC1 = 1的前提条件
+	 * #if TARGET_OS_MAC && !TARGET_OS_SIMULATOR && defined(__i386__)
+	 */
 #if OS_OBJECT_HAVE_OBJC1
 	const struct dispatch_object_vtable_s *_vtable = vtable;
 	dispatch_object_t dou;

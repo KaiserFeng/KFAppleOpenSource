@@ -205,6 +205,10 @@
 	void (*const dq_push)(dispatch_queue_class_t, dispatch_object_t, \
 			dispatch_qos_t)
 
+
+/*
+ * vtable 的各种作用
+ */
 #define dx_vtable(x) (&(x)->do_vtable->_os_obj_vtable)
 #define dx_type(x) dx_vtable(x)->do_type
 #define dx_metatype(x) (dx_vtable(x)->do_type & _DISPATCH_META_TYPE_MASK)
@@ -433,6 +437,14 @@ typedef struct _os_object_s {
 	os_obj_xref_cnt);
 } _os_object_s;
 
+/*
+ * dispatch_queue_t的最终定义（宏嵌套宏）
+ *
+ * _objc_isa     isa 指针
+ * do_ref_cnt    引用计数
+ * do_xref_cnt   外部引用计数
+ * do_vtable     该变量就是将任务PUSH到队列
+ */
 #if OS_OBJECT_HAVE_OBJC1
 #define OS_OBJECT_STRUCT_HEADER(x) \
 	_OS_OBJECT_HEADER(\
