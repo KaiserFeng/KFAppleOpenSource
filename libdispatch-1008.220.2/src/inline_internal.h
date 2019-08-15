@@ -1389,7 +1389,7 @@ _dispatch_queue_try_reserve_sync_width(dispatch_lane_t dq)
 }
 
 /* Used by target-queue recursing code
- *
+ * 目标队列递归代码时使用
  * Initial state must be { sc:0, ib:0, qf:0, pb:0, d:0 }
  * Final state: { w += 1 }
  */
@@ -1716,6 +1716,12 @@ _dispatch_root_queue_push_inline(dispatch_queue_global_t dq,
 		dispatch_object_t _head, dispatch_object_t _tail, int n)
 {
 	struct dispatch_object_s *hd = _head._do, *tl = _tail._do;
+	/*
+	 * 把任务装进队列，大多数不走进if语句。但是第一个任务进来之前还是满足这个条件式的，
+	 * 会进入这个条件语句去激活队列来执行里面的任务，后面再加入的任务因为队列被激活了，
+	 * 所以也就不太需要再进入这个队列了，所以相对来说激活队列只要一次，所以作者认为大多数情况下
+	 * 不需要走进这个条件语句
+	 */
 	if (unlikely(os_mpsc_push_list(os_mpsc(dq, dq_items), hd, tl, do_next))) {
 		return _dispatch_root_queue_poke(dq, n, 0);
 	}
@@ -2453,6 +2459,7 @@ _dispatch_continuation_invoke_inline(dispatch_object_t dou,
 		if (unlikely(dc_flags & DC_FLAG_GROUP_ASYNC)) {
 			_dispatch_continuation_with_group_invoke(dc);
 		} else {
+			// 直接执行block函数
 			_dispatch_client_callout(dc->dc_ctxt, dc->dc_func);
 			_dispatch_trace_item_complete(dc);
 		}
@@ -2463,6 +2470,7 @@ _dispatch_continuation_invoke_inline(dispatch_object_t dou,
 	_dispatch_perfmon_workitem_inc();
 }
 
+// 调度出任务的执行函数
 DISPATCH_ALWAYS_INLINE_NDEBUG
 static inline void
 _dispatch_continuation_pop_inline(dispatch_object_t dou,
@@ -2473,6 +2481,10 @@ _dispatch_continuation_pop_inline(dispatch_object_t dou,
 			_dispatch_get_pthread_root_queue_observer_hooks();
 	if (observer_hooks) observer_hooks->queue_will_execute(dqu._dq);
 	flags &= _DISPATCH_INVOKE_PROPAGATE_MASK;
+	// dispatch_async是有do_vtable成员变量的，所以会走if分支，又invoke方法指定
+	// _dispatch_async_redirect_invoke，所以执行该函数
+	// 相同的，如果是dispatch_get_global_queue也会走if分支，执行
+	// _dispatch_queue_override_invoke方法
 	if (_dispatch_object_has_vtable(dou)) {
 		dx_invoke(dou._dq, dic, flags);
 	} else {
@@ -2609,7 +2621,7 @@ _dispatch_continuation_async(dispatch_queue_class_t dqu,
 #else
 	(void)dc_flags;
 #endif
-	// 将任务push到队列
+	// 将任务push到队列,后续就是vtable的-> dq.push,队列性质不同调用不同的dq.push
 	return dx_push(dqu._dq, dc, qos);
 }
 

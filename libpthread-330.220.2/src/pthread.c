@@ -2195,6 +2195,8 @@ _pthread_wqthread_exit(pthread_t self)
 }
 
 // workqueue entry point from kernel
+// 来自内核的工作队列入口点
+// 由汇编代码 start_wqthread 调用来的
 void
 _pthread_wqthread(pthread_t self, mach_port_t kport, void *stacklowaddr,
 		void *keventlist, int flags, int nkevents)
@@ -2237,6 +2239,7 @@ _pthread_wqthread(pthread_t self, mach_port_t kport, void *stacklowaddr,
 		self->arg = (void *)(uintptr_t)pp;
 		self->wq_nevents = 0;
 		if (os_likely(__workq_newapi)) {
+			// 执行 函数（_dispatch_worker_thread2）
 			(*__libdispatch_workerfunction)(pp);
 		} else {
 			_pthread_wqthread_legacy_worker_wrap(pp);
@@ -2295,6 +2298,7 @@ pthread_workqueue_setdispatch_with_workloop_np(pthread_workqueue_function2_t que
 		if (res == -1){
 			res = ENOTSUP;
 		} else {
+			// 指定了队列工作函数 这个工作函数是 _dispatch_worker_thread2
 			__libdispatch_workerfunction = queue_func;
 			__libdispatch_keventfunction = kevent_func;
 			__libdispatch_workloopfunction = workloop_func;

@@ -569,6 +569,9 @@ _dispatch_object_no_invoke(dispatch_object_t dou,
  * Dispatch object cluster
  */
 
+/*
+ * semaphore
+ */
 DISPATCH_VTABLE_INSTANCE(semaphore,
 	.do_type        = DISPATCH_SEMAPHORE_TYPE,
 	.do_dispose     = _dispatch_semaphore_dispose,
@@ -576,6 +579,9 @@ DISPATCH_VTABLE_INSTANCE(semaphore,
 	.do_invoke      = _dispatch_object_no_invoke,
 );
 
+/*
+ * group
+ */
 DISPATCH_VTABLE_INSTANCE(group,
 	.do_type        = DISPATCH_GROUP_TYPE,
 	.do_dispose     = _dispatch_group_dispose,
@@ -592,6 +598,9 @@ DISPATCH_VTABLE_INSTANCE(data,
 );
 #endif
 
+/*
+ * queue_attr
+ */
 DISPATCH_VTABLE_INSTANCE(queue_attr,
 	.do_type        = DISPATCH_QUEUE_ATTR_TYPE,
 	.do_dispose     = _dispatch_object_no_dispose,
@@ -600,6 +609,9 @@ DISPATCH_VTABLE_INSTANCE(queue_attr,
 );
 
 #if HAVE_MACH
+/*
+ * mach_msg
+ */
 DISPATCH_VTABLE_INSTANCE(mach_msg,
 	.do_type        = DISPATCH_MACH_MSG_TYPE,
 	.do_dispose     = _dispatch_mach_msg_dispose,
@@ -608,6 +620,9 @@ DISPATCH_VTABLE_INSTANCE(mach_msg,
 );
 #endif // HAVE_MACH
 
+/*
+ * io
+ */
 DISPATCH_VTABLE_INSTANCE(io,
 	.do_type        = DISPATCH_IO_TYPE,
 	.do_dispose     = _dispatch_io_dispose,
@@ -615,6 +630,9 @@ DISPATCH_VTABLE_INSTANCE(io,
 	.do_invoke      = _dispatch_object_no_invoke,
 );
 
+/*
+ * operation
+ */
 DISPATCH_VTABLE_INSTANCE(operation,
 	.do_type        = DISPATCH_OPERATION_TYPE,
 	.do_dispose     = _dispatch_operation_dispose,
@@ -622,6 +640,9 @@ DISPATCH_VTABLE_INSTANCE(operation,
 	.do_invoke      = _dispatch_object_no_invoke,
 );
 
+/*
+ * disk
+ */
 DISPATCH_VTABLE_INSTANCE(disk,
 	.do_type        = DISPATCH_DISK_TYPE,
 	.do_dispose     = _dispatch_disk_dispose,
@@ -641,6 +662,9 @@ _dispatch_queue_no_activate(dispatch_queue_class_t dqu,
 	DISPATCH_INTERNAL_CRASH(dx_type(dqu._dq), "dq_activate called");
 }
 
+/*
+ * queue
+ */
 DISPATCH_VTABLE_INSTANCE(queue,
 	// This is the base class for queues, no objects of this type are made
 	.do_type        = _DISPATCH_QUEUE_CLUSTER,
@@ -651,6 +675,9 @@ DISPATCH_VTABLE_INSTANCE(queue,
 	.dq_activate    = _dispatch_queue_no_activate,
 );
 
+/*
+ * workloop
+ */
 DISPATCH_VTABLE_INSTANCE(workloop,
 	.do_type        = DISPATCH_WORKLOOP_TYPE,
 	.do_dispose     = _dispatch_workloop_dispose,
@@ -682,6 +709,15 @@ DISPATCH_VTABLE_SUBCLASS_INSTANCE(queue_serial, lane,
 	.dq_push        = _dispatch_lane_push,
 );
 
+/*
+ * viable的并发对象
+ * do_dispose 销毁函数
+ * do_invoke 调用函数
+ * dq_activate 激活函数
+ * dq_wakeup 唤醒函数
+ * dq_push push函数，push block任务到队列，就是dq_push的功劳
+ *
+ */
 DISPATCH_VTABLE_SUBCLASS_INSTANCE(queue_concurrent, lane,
 	.do_type        = DISPATCH_QUEUE_CONCURRENT_TYPE,
 	.do_dispose     = _dispatch_lane_dispose,
@@ -693,6 +729,15 @@ DISPATCH_VTABLE_SUBCLASS_INSTANCE(queue_concurrent, lane,
 	.dq_push        = _dispatch_lane_concurrent_push,
 );
 
+/*
+ * viable的全局对象
+ * do_dispose 销毁函数
+ * do_invoke 调用函数
+ * dq_activate 激活函数
+ * dq_wakeup 唤醒函数
+ * dq_push push函数，push block任务到队列，就是dq_push的功劳
+ *
+ */
 DISPATCH_VTABLE_SUBCLASS_INSTANCE(queue_global, lane,
 	.do_type        = DISPATCH_QUEUE_GLOBAL_ROOT_TYPE,
 	.do_dispose     = _dispatch_object_no_dispose,
@@ -732,6 +777,15 @@ DISPATCH_VTABLE_SUBCLASS_INSTANCE(queue_mgr, lane,
 	.dq_push        = _dispatch_mgr_queue_push,
 );
 
+/*
+ * viable的main queue对象
+ * do_dispose 销毁函数
+ * do_invoke 调用函数
+ * dq_activate 激活函数
+ * dq_wakeup 唤醒函数
+ * dq_push push函数，push block任务到队列，就是dq_push的功劳
+ *
+ */
 DISPATCH_VTABLE_SUBCLASS_INSTANCE(queue_main, lane,
 	.do_type        = DISPATCH_QUEUE_MAIN_TYPE,
 	.do_dispose     = _dispatch_lane_dispose,
@@ -756,6 +810,15 @@ DISPATCH_VTABLE_SUBCLASS_INSTANCE(queue_runloop, lane,
 );
 #endif
 
+/*
+ * viable的源对象
+ * do_dispose 销毁函数
+ * do_invoke 调用函数
+ * dq_activate 激活函数
+ * dq_wakeup 唤醒函数
+ * dq_push push函数，push block任务到队列，就是dq_push的功劳
+ *
+ */
 DISPATCH_VTABLE_INSTANCE(source,
 	.do_type        = DISPATCH_SOURCE_KEVENT_TYPE,
 	.do_dispose     = _dispatch_source_dispose,

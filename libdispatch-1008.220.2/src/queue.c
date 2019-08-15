@@ -206,6 +206,7 @@ static void _dispatch_queue_override_invoke(dispatch_continuation_t dc,
 static void _dispatch_workloop_stealer_invoke(dispatch_continuation_t dc,
 		dispatch_invoke_context_t dic, dispatch_invoke_flags_t flags);
 
+// DC_VTABLE(ASYNC_REDIRECT)
 const struct dispatch_continuation_vtable_s _dispatch_continuation_vtables[] = {
 	DC_VTABLE_ENTRY(ASYNC_REDIRECT,
 		.do_invoke = _dispatch_async_redirect_invoke),
@@ -273,6 +274,7 @@ _dispatch_continuation_free_to_cache_limit(dispatch_continuation_t dc)
 }
 #endif
 
+// 无论自定义的队列还是获取系统的，都会调用这个函数
 DISPATCH_NOINLINE
 void
 _dispatch_continuation_pop(dispatch_object_t dou, dispatch_invoke_context_t dic,
@@ -761,6 +763,7 @@ dispatch_barrier_async(dispatch_queue_t dq, dispatch_block_t work)
 #pragma mark -
 #pragma mark dispatch_async
 
+// 按自定义队列步骤走
 void
 _dispatch_async_redirect_invoke(dispatch_continuation_t dc,
 		dispatch_invoke_context_t dic, dispatch_invoke_flags_t flags)
@@ -789,6 +792,7 @@ _dispatch_async_redirect_invoke(dispatch_continuation_t dc,
 
 	uintptr_t dc_flags = DC_FLAG_CONSUME | DC_FLAG_NO_INTROSPECTION;
 	_dispatch_thread_frame_push(&dtf, dq);
+	// 宏定义
 	_dispatch_continuation_pop_forwarded(dc, dc_flags, NULL, {
 		_dispatch_continuation_pop(other_dc, dic, flags, dq);
 	});
@@ -813,9 +817,11 @@ _dispatch_async_redirect_wrap(dispatch_lane_t dq, dispatch_object_t dou)
 	dispatch_continuation_t dc = _dispatch_continuation_alloc();
 
 	dou._do->do_next = NULL;
+	// dispatch_async推进的任务的vtable的成员变量是有值的
 	dc->do_vtable = DC_VTABLE(ASYNC_REDIRECT);
 	dc->dc_func = NULL;
 	dc->dc_ctxt = (void *)(uintptr_t)_dispatch_queue_autorelease_frequency(dq);
+	//所属队列装入dou._dc->dc_data里面了
 	dc->dc_data = dq;
 	dc->dc_other = dou._do;
 	dc->dc_voucher = DISPATCH_NO_VOUCHER;
@@ -830,17 +836,22 @@ _dispatch_continuation_redirect_push(dispatch_lane_t dl,
 		dispatch_object_t dou, dispatch_qos_t qos)
 {
 	if (likely(!_dispatch_object_is_redirection(dou))) {
+		// 重新 构建 dispatch_continuation_t
 		dou._dc = _dispatch_async_redirect_wrap(dl, dou);
 	} else if (!dou._dc->dc_ctxt) {
 		// find first queue in descending target queue order that has
 		// an autorelease frequency set, and use that as the frequency for
 		// this continuation.
+		
+		// 基本不会走，主要是找到 root队列 ？？？
 		dou._dc->dc_ctxt = (void *)
 		(uintptr_t)_dispatch_queue_autorelease_frequency(dl);
 	}
 
+	// dq换成绑定的root queue
 	dispatch_queue_t dq = dl->do_targetq;
 	if (!qos) qos = _dispatch_priority_qos(dq->dq_priority);
+	//把装有block信息的结构体装进所在队列对应的root_queue里面 ？难道不是 push到队列？？？？
 	dx_push(dq, dou, qos);
 }
 
@@ -4607,12 +4618,17 @@ _dispatch_root_queue_push_override(dispatch_queue_global_t orig_rq,
 	dispatch_queue_global_t rq = _dispatch_get_root_queue(qos, overcommit);
 	dispatch_continuation_t dc = dou._dc;
 
+	// 这个 _dispatch_object_is_redirection 函数就是 return _dispatch_object_ha
+	// s_type(dou,DISPATCH_CONTINUATION_TYPE(ASYNC_REDIRECT))
+	// 自定义队列会走这个if语句，如果是 dispatch_get_global_queue 不会走if语句 en？？？
 	if (_dispatch_object_is_redirection(dc)) {
 		// no double-wrap is needed, _dispatch_async_redirect_invoke will do
 		// the right thing
 		dc->dc_func = (void *)orig_rq;
 	} else {
+		// dispatch_get_global_queue 来到这里
 		dc = _dispatch_continuation_alloc();
+		// 指定了执行函数为 _dispatch_queue_override_invoke，所以有别于自定义队列的invoke函数
 		dc->do_vtable = DC_VTABLE(OVERRIDE_OWNING);
 		dc->dc_ctxt = dc;
 		dc->dc_other = orig_rq;
@@ -5011,6 +5027,9 @@ _dispatch_lane_push(dispatch_lane_t dq, dispatch_object_t dou,
 	}
 }
 
+/*
+ * 并发 push
+ */
 DISPATCH_NOINLINE
 void
 _dispatch_lane_concurrent_push(dispatch_lane_t dq, dispatch_object_t dou,
@@ -5020,6 +5039,14 @@ _dispatch_lane_concurrent_push(dispatch_lane_t dq, dispatch_object_t dou,
 	// doesn't fail if only the ENQUEUED bit is set (unlike its barrier
 	// width equivalent), so we have to check that this thread hasn't
 	// enqueued anything ahead of this call or we can break ordering
+	// 因此，我们必须检查这个线程在调用之前没有排队，或者我们可以中断排序。
+	/*
+	 * dq->dq_items_tail == NULL               队列中没有任务
+	 * !_dispatch_object_is_waiter(dou)        不处于等待状态
+	 * !_dispatch_object_is_barrier(dou)       不是栅栏函数
+	 * _dispatch_queue_try_acquire_async(dq)   ？？？
+	 * _dispatch_continuation_redirect_push 重定向 push
+	 */
 	if (dq->dq_items_tail == NULL &&
 			!_dispatch_object_is_waiter(dou) &&
 			!_dispatch_object_is_barrier(dou) &&
@@ -5027,6 +5054,7 @@ _dispatch_lane_concurrent_push(dispatch_lane_t dq, dispatch_object_t dou,
 		return _dispatch_continuation_redirect_push(dq, dou, qos);
 	}
 
+	// 队列中存在任务
 	_dispatch_lane_push(dq, dou, qos);
 }
 
@@ -5573,6 +5601,36 @@ _dispatch_root_queue_poke_slow(dispatch_queue_global_t dq, int n, int floor)
 	{
 		_dispatch_root_queue_debug("requesting new worker thread for global "
 				"queue: %p", dq);
+		// 把任务交给内核分发处理 _pthread_workqueue_addthreads 定义在libpthread中
+		/*
+		 * int
+		 _pthread_workqueue_addthreads(int numthreads, pthread_priority_t priority)
+		 {
+		 int res = 0;
+		 
+		 if (__libdispatch_workerfunction == NULL) {
+		 return EPERM;
+		 }
+		 
+		 #if TARGET_OS_OSX
+		 // <rdar://problem/37687655> Legacy simulators fail to boot
+		 //
+		 // Older sims set the deprecated _PTHREAD_PRIORITY_ROOTQUEUE_FLAG wrongly,
+		 // which is aliased to _PTHREAD_PRIORITY_SCHED_PRI_FLAG and that XNU
+		 // validates and rejects.
+		 //
+		 // As a workaround, forcefully unset this bit that cannot be set here
+		 // anyway.
+		 priority &= ~_PTHREAD_PRIORITY_SCHED_PRI_FLAG;
+		 #endif
+		 
+		 res = __workq_kernreturn(WQOPS_QUEUE_REQTHREADS, NULL, numthreads, (int)priority);
+		 if (res == -1) {
+		 res = errno;
+		 }
+		 return res;
+		 }
+		 */
 		r = _pthread_workqueue_addthreads(remaining,
 				_dispatch_priority_to_pp_prefer_fallback(dq->dq_priority));
 		(void)dispatch_assume_zero(r);
@@ -5890,6 +5948,7 @@ _dispatch_root_queue_drain_deferred_item(dispatch_deferred_items_t ddi
 }
 #endif
 
+// 循环取出任务
 DISPATCH_NOT_TAIL_CALLED // prevent tailcall (for Instrument DTrace probe)
 static void
 _dispatch_root_queue_drain(dispatch_queue_global_t dq,
@@ -5915,6 +5974,7 @@ _dispatch_root_queue_drain(dispatch_queue_global_t dq,
 	_dispatch_perfmon_start();
 	while (likely(item = _dispatch_root_queue_drain_one(dq))) {
 		if (reset) _dispatch_wqthread_override_reset();
+		// 调度出任务的执行函数
 		_dispatch_continuation_pop_inline(item, &dic, flags, dq);
 		reset = _dispatch_reset_basepri_override();
 		if (unlikely(_dispatch_queue_drain_should_narrow(&dic))) {
@@ -5946,6 +6006,7 @@ _dispatch_worker_thread2(pthread_priority_t pp)
 
 	pp &= _PTHREAD_PRIORITY_OVERCOMMIT_FLAG | ~_PTHREAD_PRIORITY_FLAGS_MASK;
 	_dispatch_thread_setspecific(dispatch_priority_key, (void *)(uintptr_t)pp);
+	// 根据 优先级取出相应的root队列
 	dq = _dispatch_get_root_queue(_dispatch_qos_from_pp(pp), overcommit);
 
 	_dispatch_introspection_thread_add();
@@ -5953,6 +6014,7 @@ _dispatch_worker_thread2(pthread_priority_t pp)
 
 	int pending = os_atomic_dec2o(dq, dgq_pending, relaxed);
 	dispatch_assert(pending >= 0);
+	// 重点函数 取出任务
 	_dispatch_root_queue_drain(dq, dq->dq_priority,
 			DISPATCH_INVOKE_WORKER_DRAIN | DISPATCH_INVOKE_REDIRECTING_DRAIN);
 	_dispatch_voucher_debug("root queue clear", NULL);
@@ -6110,6 +6172,7 @@ _dispatch_root_queue_push(dispatch_queue_global_t rq, dispatch_object_t dou,
 	}
 #endif
 #if HAVE_PTHREAD_WORKQUEUE_QOS
+	//比较Qos与root队列的qos是否一致，如果不一致，条件成立
 	if (_dispatch_root_queue_push_needs_override(rq, qos)) {
 		return _dispatch_root_queue_push_override(rq, dou, qos);
 	}
@@ -6903,6 +6966,7 @@ _dispatch_root_queues_init_once(void *context DISPATCH_UNUSED)
 	_dispatch_fork_becomes_unsafe();
 #if DISPATCH_USE_INTERNAL_WORKQUEUE
 	size_t i;
+	// DISPATCH_ROOT_QUEUE_COUNT  12个Root队列
 	for (i = 0; i < DISPATCH_ROOT_QUEUE_COUNT; i++) {
 		_dispatch_root_queue_init_pthread_pool(&_dispatch_root_queues[i], 0,
 				_dispatch_root_queues[i].dq_priority);
@@ -6921,6 +6985,7 @@ _dispatch_root_queues_init_once(void *context DISPATCH_UNUSED)
 				offsetof(struct dispatch_queue_s, dq_serialnum), 0);
 #if DISPATCH_USE_KEVENT_WORKQUEUE
 	} else if (wq_supported & WORKQ_FEATURE_KEVENT) {
+		// _pthread_workqueue_init_with_kevent 该函数绑定了 _dispatch_worker_thread2 去做一些GCD的线程任务
 		r = _pthread_workqueue_init_with_kevent(_dispatch_worker_thread2,
 				(pthread_workqueue_function_kevent_t)
 				_dispatch_kevent_worker_thread,
