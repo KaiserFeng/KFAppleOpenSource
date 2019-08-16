@@ -228,15 +228,15 @@ struct Block_descriptor_2 {
 #define BLOCK_DESCRIPTOR_3 1
 struct Block_descriptor_3 {
     // requires BLOCK_HAS_SIGNATURE
-    const char *signature;
+    const char *signature;       // 签名
     const char *layout;     // contents depend on BLOCK_HAS_EXTENDED_LAYOUT
 };
 
 struct Block_layout {
     void *isa;
-    volatile int32_t flags; // contains ref count
-    int32_t reserved;
-    BlockInvokeFunction invoke;
+    volatile int32_t flags; // contains ref count  // 引用计数？
+    int32_t reserved;              // 保留字段
+    BlockInvokeFunction invoke;    // 调用
     struct Block_descriptor_1 *descriptor;
     // imported variables
 };
@@ -417,7 +417,7 @@ BLOCK_EXPORT bool _Block_isDeallocating(const void *aBlock)
     __OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_4_3);
 
 
-// the raw data space for runtime classes for blocks
+// the raw data space（原始数据空间） for runtime classes for blocks
 // class+meta used for stack, malloc, and collectable based blocks
 BLOCK_EXPORT void * _NSConcreteMallocBlock[32]
     __OSX_AVAILABLE_STARTING(__MAC_10_6, __IPHONE_3_2);

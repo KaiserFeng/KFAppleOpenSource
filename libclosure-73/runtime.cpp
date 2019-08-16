@@ -203,6 +203,7 @@ void *_Block_copy(const void *arg) {
     }
     else {
         // Its a stack block.  Make a copy.
+        // 他是一个栈block。需要copy一份
         struct Block_layout *result =
             (struct Block_layout *)malloc(aBlock->descriptor->size);
         if (!result) return NULL;
@@ -216,6 +217,7 @@ void *_Block_copy(const void *arg) {
         result->flags |= BLOCK_NEEDS_FREE | 2;  // logical refcount 1
         _Block_call_copy_helper(result, aBlock);
         // Set isa last so memory analysis tools see a fully-initialized object.
+        // 设置为 MallocBlock
         result->isa = _NSConcreteMallocBlock;
         return result;
     }

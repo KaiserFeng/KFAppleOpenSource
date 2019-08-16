@@ -28,23 +28,29 @@ extern "C" {
 // Create a heap based copy of a Block or simply add a reference to an existing one.
 // This must be paired with Block_release to recover memory, even when running
 // under Objective-C Garbage Collection.
+// copy block到heap或者添加一个引用
+// 这个必须跟Block_release成对使用来恢复内存
 BLOCK_EXPORT void *_Block_copy(const void *aBlock)
     __OSX_AVAILABLE_STARTING(__MAC_10_6, __IPHONE_3_2);
 
 // Lose the reference, and if heap based and last reference, recover the memory
+// 移除引用
 BLOCK_EXPORT void _Block_release(const void *aBlock)
     __OSX_AVAILABLE_STARTING(__MAC_10_6, __IPHONE_3_2);
 
 
 // Used by the compiler. Do not call this function yourself.
+// 编译器使用。不要自己调用。
 BLOCK_EXPORT void _Block_object_assign(void *, const void *, const int)
     __OSX_AVAILABLE_STARTING(__MAC_10_6, __IPHONE_3_2);
 
 // Used by the compiler. Do not call this function yourself.
+// 编译器使用。不要自己调用。
 BLOCK_EXPORT void _Block_object_dispose(const void *, const int)
     __OSX_AVAILABLE_STARTING(__MAC_10_6, __IPHONE_3_2);
 
 // Used by the compiler. Do not use these variables yourself.
+// 编译器使用。不要自己调用。
 BLOCK_EXPORT void * _NSConcreteGlobalBlock[32]
     __OSX_AVAILABLE_STARTING(__MAC_10_6, __IPHONE_3_2);
 BLOCK_EXPORT void * _NSConcreteStackBlock[32]
