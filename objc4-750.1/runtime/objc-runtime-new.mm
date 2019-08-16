@@ -6755,6 +6755,12 @@ object_copyFromZone(id oldObj, size_t extraBytes, void *zone)
 * Calls ARC ivar cleanup.
 * Removes associative references.
 * Returns `obj`. Does nothing if `obj` is nil.
+ 
+* 销毁实例但是不释放内存。
+* 调用 C++析构
+* 调用 ARC 变量清除
+* 移除关联引用
+* 如果 对象 为 nil，那么什么都不做
 **********************************************************************/
 void *objc_destructInstance(id obj) 
 {
@@ -6765,6 +6771,7 @@ void *objc_destructInstance(id obj)
         bool assoc = obj->hasAssociatedObjects();
 
         // This order is important.
+        // 这个次序很重要！！！
         if (cxx) object_cxxDestruct(obj);
         if (assoc) _object_remove_assocations(obj);
         obj->clearDeallocating();

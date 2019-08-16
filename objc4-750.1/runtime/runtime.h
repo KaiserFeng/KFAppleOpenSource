@@ -52,19 +52,20 @@ typedef struct objc_category *Category;
 /// An opaque type that represents an Objective-C declared property.
 typedef struct objc_property *objc_property_t;
 
+// objc_class 结构体定义
 struct objc_class {
-    Class _Nonnull isa  OBJC_ISA_AVAILABILITY;
+    Class _Nonnull isa  OBJC_ISA_AVAILABILITY;       // isa指针
 
 #if !__OBJC2__
-    Class _Nullable super_class                              OBJC2_UNAVAILABLE;
-    const char * _Nonnull name                               OBJC2_UNAVAILABLE;
-    long version                                             OBJC2_UNAVAILABLE;
-    long info                                                OBJC2_UNAVAILABLE;
-    long instance_size                                       OBJC2_UNAVAILABLE;
-    struct objc_ivar_list * _Nullable ivars                  OBJC2_UNAVAILABLE;
-    struct objc_method_list * _Nullable * _Nullable methodLists                    OBJC2_UNAVAILABLE;
-    struct objc_cache * _Nonnull cache                       OBJC2_UNAVAILABLE;
-    struct objc_protocol_list * _Nullable protocols          OBJC2_UNAVAILABLE;
+    Class _Nullable super_class                              OBJC2_UNAVAILABLE;    // 父类
+    const char * _Nonnull name                               OBJC2_UNAVAILABLE;    // 类名
+    long version                                             OBJC2_UNAVAILABLE;    // 版本
+    long info                                                OBJC2_UNAVAILABLE;    // 信息
+    long instance_size                                       OBJC2_UNAVAILABLE;    // 实例大小
+    struct objc_ivar_list * _Nullable ivars                  OBJC2_UNAVAILABLE;    // 成员变量列表
+    struct objc_method_list * _Nullable * _Nullable methodLists                    OBJC2_UNAVAILABLE;     // 方法列表
+    struct objc_cache * _Nonnull cache                       OBJC2_UNAVAILABLE;    // 缓存
+    struct objc_protocol_list * _Nullable protocols          OBJC2_UNAVAILABLE;    // 协议列表
 #endif
 
 } OBJC2_UNAVAILABLE;

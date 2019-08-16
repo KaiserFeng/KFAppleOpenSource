@@ -34,6 +34,7 @@ dispatch_semaphore_create(long value)
 	// If the internal value is negative, then the absolute of the value is
 	// equal to the number of waiting threads. Therefore it is bogus to
 	// initialize the semaphore with a negative value.
+	// 传入的参数不能是一个负数
 	if (value < 0) {
 		return DISPATCH_BAD_INPUT;
 	}
@@ -43,6 +44,7 @@ dispatch_semaphore_create(long value)
 	dsema->do_next = DISPATCH_OBJECT_LISTLESS;
 	dsema->do_targetq = _dispatch_get_default_queue(false);
 	dsema->dsema_value = value;
+	// 初始化信号量
 	_dispatch_sema4_init(&dsema->dsema_sema, _DSEMA4_POLICY_FIFO);
 	dsema->dsema_orig = value;
 	return dsema;
@@ -253,6 +255,8 @@ _dispatch_group_wake(dispatch_group_t dg, uint64_t dg_state, bool needs_release)
 
 		// Snapshot before anything is notified/woken <rdar://problem/8554546>
 		dc = os_mpsc_capture_snapshot(os_mpsc(dg, dg_notify), &tail);
+		// dispatch_group里面是否还有任务等待执行，有的话就加入
+		// 比如 dispatch_group_notify的任务就在此时被唤醒
 		do {
 			dispatch_queue_t dsn_queue = (dispatch_queue_t)dc->dc_data;
 			next_dc = os_mpsc_pop_snapshot_head(dc, tail, do_next);
@@ -276,6 +280,7 @@ dispatch_group_leave(dispatch_group_t dg)
 {
 	// The value is incremented on a 64bits wide atomic so that the carry for
 	// the -1 -> 0 transition increments the generation atomically.
+	// 该值在64位宽的原子上递增，以便-1->0跃迁的进位自动递增生成。
 	uint64_t new_state, old_state = os_atomic_add_orig2o(dg, dg_state,
 			DISPATCH_GROUP_VALUE_INTERVAL, release);
 	uint32_t old_value = (uint32_t)(old_state & DISPATCH_GROUP_VALUE_MASK);
@@ -296,9 +301,11 @@ dispatch_group_leave(dispatch_group_t dg)
 			if (old_state == new_state) break;
 		} while (unlikely(!os_atomic_cmpxchgv2o(dg, dg_state,
 				old_state, new_state, &old_state, relaxed)));
+		// 如果没有等待者 ？？？，则调用 _dispatch_group_wake 函数
 		return _dispatch_group_wake(dg, old_state, true);
 	}
 
+	// enter与leave必须配对使用，否则就会crash
 	if (unlikely(old_value == 0)) {
 		DISPATCH_CLIENT_CRASH((uintptr_t)old_value,
 				"Unbalanced call to dispatch_group_leave()");
@@ -310,6 +317,8 @@ dispatch_group_enter(dispatch_group_t dg)
 {
 	// The value is decremented on a 32bits wide atomic so that the carry
 	// for the 0 -> -1 transition is not propagated to the upper 32bits.
+	// 该值在32位宽的原子上递减，使得0->-1跃迁的进位不会传播到高32位。
+	// 这里面啥也没说 就是dg->dg_value的值加1
 	uint32_t old_bits = os_atomic_sub_orig2o(dg, dg_bits,
 			DISPATCH_GROUP_VALUE_INTERVAL, acquire);
 	uint32_t old_value = old_bits & DISPATCH_GROUP_VALUE_MASK;
@@ -341,6 +350,7 @@ _dispatch_group_notify(dispatch_group_t dg, dispatch_queue_t dq,
 			new_state = old_state | DISPATCH_GROUP_HAS_NOTIFS;
 			if ((uint32_t)old_state == 0) {
 				os_atomic_rmw_loop_give_up({
+					// 如果此时group里面的任务都完成了，那么就立刻唤醒
 					return _dispatch_group_wake(dg, new_state, false);
 				});
 			}
@@ -376,6 +386,8 @@ _dispatch_continuation_group_async(dispatch_group_t dg, dispatch_queue_t dq,
 {
 	dispatch_group_enter(dg);
 	dc->dc_data = dg;
+	// 后续就跟 dispatch_async差不多了
+	// 唯一不同的就是 _dispatch_continuation_invoke_inline函数
 	_dispatch_continuation_async(dq, dc, qos, dc->dc_flags);
 }
 
@@ -392,6 +404,7 @@ dispatch_group_async_f(dispatch_group_t dg, dispatch_queue_t dq, void *ctxt,
 	_dispatch_continuation_group_async(dg, dq, dc, qos);
 }
 
+#pragma mark ==  dispatch_group_async 组异步入口
 #ifdef __BLOCKS__
 void
 dispatch_group_async(dispatch_group_t dg, dispatch_queue_t dq,
@@ -401,6 +414,7 @@ dispatch_group_async(dispatch_group_t dg, dispatch_queue_t dq,
 	uintptr_t dc_flags = DC_FLAG_CONSUME | DC_FLAG_GROUP_ASYNC;
 	dispatch_qos_t qos;
 
+	// _dispatch_continuation_init 保存block上下文，指定block执行函数
 	qos = _dispatch_continuation_init(dc, dq, db, 0, dc_flags);
 	_dispatch_continuation_group_async(dg, dq, dc, qos);
 }

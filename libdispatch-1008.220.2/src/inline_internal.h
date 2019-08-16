@@ -2425,8 +2425,10 @@ _dispatch_continuation_with_group_invoke(dispatch_continuation_t dc)
 	struct dispatch_object_s *dou = dc->dc_data;
 	unsigned long type = dx_type(dou);
 	if (type == DISPATCH_GROUP_TYPE) {
+		// 执行函数
 		_dispatch_client_callout(dc->dc_ctxt, dc->dc_func);
 		_dispatch_trace_item_complete(dc);
+		// leave 之前有个 enter，配对使用
 		dispatch_group_leave((dispatch_group_t)dou);
 	} else {
 		DISPATCH_INTERNAL_CRASH(dx_type(dou), "Unexpected object type");
@@ -2456,6 +2458,7 @@ _dispatch_continuation_invoke_inline(dispatch_object_t dou,
 		} else {
 			dc1 = NULL;
 		}
+		// group async 走if分支
 		if (unlikely(dc_flags & DC_FLAG_GROUP_ASYNC)) {
 			_dispatch_continuation_with_group_invoke(dc);
 		} else {
@@ -2485,6 +2488,10 @@ _dispatch_continuation_pop_inline(dispatch_object_t dou,
 	// _dispatch_async_redirect_invoke，所以执行该函数
 	// 相同的，如果是dispatch_get_global_queue也会走if分支，执行
 	// _dispatch_queue_override_invoke方法
+	
+	// 所以为什么官方文档说，不是自定义队列使用barrier无效。因为不是自定义队列，这里就直接
+	// 走_dispatch_continuation_invoke_inlinea函数，调用函数实现了，也就是dispatch_barrier_async
+	// 类似于dispatch_async 了
 	if (_dispatch_object_has_vtable(dou)) {
 		dx_invoke(dou._dq, dic, flags);
 	} else {

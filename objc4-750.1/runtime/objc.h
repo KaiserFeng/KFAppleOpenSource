@@ -38,11 +38,13 @@
 typedef struct objc_class *Class;
 
 /// Represents an instance of a class.
+/// 表示一个类的实例
 struct objc_object {
     Class _Nonnull isa  OBJC_ISA_AVAILABILITY;
 };
 
 /// A pointer to an instance of a class.
+/// 指向一个类的实例的指针
 typedef struct objc_object *id;
 #endif
 

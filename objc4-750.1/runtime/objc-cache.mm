@@ -39,6 +39,9 @@
  * objc_msgSend running concurrently with the cache mutator will not 
  * crash or hang or get an incorrect result from the cache. 
  *
+ * 对于速度，objc_msgSend在读取方法缓存时不会获得任何锁。相反，所有的缓存更改都是执行的.
+ * 与cache mutator并发运行的objc_msgSend不会崩溃或挂起或从缓存中获得不正确的结果。
+ *
  * When cache memory becomes unused (e.g. the old cache after cache 
  * expansion), it is not immediately freed, because a concurrent 
  * objc_msgSend could still be using it. Instead, the memory is 
@@ -52,12 +55,24 @@
  * that could have had access to the garbage has finished or moved past the 
  * cache lookup stage, so it is safe to free the memory.
  *
+ * 当高速缓冲存储器未被使用时（例如，高速缓存扩展后的旧高速缓存），它不会立即被释放，
+ * 因为一个并发的objc_msgSend可能仍然在使用它。相反，内存与数据结构断开连接并放在垃圾列表中。
+ * 内存现在只能访问在内存断开时运行的objc_msgSend的实例;任何进一步的调用
+ * objc_msgSend将不会看到垃圾内存，因为其他数据结构不再指向它。
+ * collecting_in_critical函数检查所有线程的PC，
+ * 并在发现所有线程都在objc_msgSend之外时返回FALSE。
+ * 这意味着对objc_msgSend的任何调用都可以 对垃圾的访问已经完成或移过缓存查找阶段，因此释放内存是安全的。
+ *
  * All functions that modify cache data or structures must acquire the 
  * cacheUpdateLock to prevent interference from concurrent modifications.
  * The function that frees cache garbage must acquire the cacheUpdateLock 
  * and use collecting_in_critical() to flush out cache readers.
  * The cacheUpdateLock is also used to protect the custom allocator used 
  * for large method cache blocks.
+ *
+ * 所有修改缓存数据或结构的函数都必须获取cacheUpdateLock以防止并发修改的干扰。
+ * 释放缓存垃圾的函数必须获取cacheUpdateLock，
+ * 并使用Collection_in_Critical()刷新缓存读取器。cacheUpdateLock还用于保护用于大型方法缓存块的自定义分配器。
  *
  * Cache readers (PC-checked by collecting_in_critical())
  * objc_msgSend*
@@ -88,6 +103,7 @@
 
 
 /* Initial cache bucket count. INIT_CACHE_SIZE must be a power of two. */
+// 初始化 缓存桶数量
 enum {
     INIT_CACHE_SIZE_LOG2 = 2,
     INIT_CACHE_SIZE      = (1 << INIT_CACHE_SIZE_LOG2)

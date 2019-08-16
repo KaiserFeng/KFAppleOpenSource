@@ -23,7 +23,7 @@
 #undef dispatch_once
 #undef dispatch_once_f
 
-
+#pragma mark ==  dispatch_once 入口
 #ifdef __BLOCKS__
 void
 dispatch_once(dispatch_once_t *val, dispatch_block_t block)
@@ -47,6 +47,7 @@ _dispatch_once_callout(dispatch_once_gate_t l, void *ctxt,
 	_dispatch_once_gate_broadcast(l);
 }
 
+// 优化的跟之前的版本大不相同，基本业务逻辑没变，就是代码更精简了！！！
 DISPATCH_NOINLINE
 void
 dispatch_once_f(dispatch_once_t *val, void *ctxt, dispatch_function_t func)

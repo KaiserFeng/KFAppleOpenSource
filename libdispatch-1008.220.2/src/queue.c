@@ -747,6 +747,7 @@ _dispatch_barrier_async_detached_f(dispatch_queue_class_t dq, void *ctxt,
 	dx_push(dq._dq, dc, 0);
 }
 
+#pragma mark ==  dispatch_barrier_async 栅栏异步入口
 #ifdef __BLOCKS__
 void
 dispatch_barrier_async(dispatch_queue_t dq, dispatch_block_t work)
@@ -756,6 +757,7 @@ dispatch_barrier_async(dispatch_queue_t dq, dispatch_block_t work)
 	dispatch_qos_t qos;
 
 	qos = _dispatch_continuation_init(dc, dq, work, 0, dc_flags);
+	// 后续一样的，不同的在于 dispatch_async 直接把任务仍到root队列，而dispatch_barrier_async是把任务放到了自定义队列
 	_dispatch_continuation_async(dq, dc, qos, dc_flags);
 }
 #endif
@@ -887,7 +889,7 @@ dispatch_async_enforce_qos_class_f(dispatch_queue_t dq, void *ctxt,
 	_dispatch_async_f(dq, ctxt, func, DISPATCH_BLOCK_ENFORCE_QOS_CLASS);
 }
 
-#pragma mark ==  异步
+#pragma mark ==  dispatch_async 异步入口
 /*
  * 异步
  */
@@ -999,8 +1001,10 @@ static inline void
 _dispatch_sync_function_invoke_inline(dispatch_queue_class_t dq, void *ctxt,
 		dispatch_function_t func)
 {
+	// 保护现场 -> 调用函数 -> 恢复现场
 	dispatch_thread_frame_s dtf;
 	_dispatch_thread_frame_push(&dtf, dq);
+	// 执行任务
 	_dispatch_client_callout(ctxt, func);
 	_dispatch_perfmon_workitem_inc();
 	_dispatch_thread_frame_pop(&dtf);
@@ -1050,6 +1054,7 @@ _dispatch_sync_invoke_and_complete(dispatch_lane_t dq, void *ctxt,
 {
 	_dispatch_sync_function_invoke_inline(dq, ctxt, func);
 	_dispatch_trace_item_complete(dc);
+	// 将自定义队列加入到root队列中去。 root队列是一个数组存在的？
 	_dispatch_lane_non_barrier_complete(dq, 0);
 }
 
@@ -1064,7 +1069,9 @@ _dispatch_lane_barrier_sync_invoke_and_complete(dispatch_lane_t dq,
 {
 	_dispatch_sync_function_invoke_inline(dq, ctxt, func);
 	_dispatch_trace_item_complete(dc);
+	// 如果后面还有任务
 	if (unlikely(dq->dq_items_tail || dq->dq_width > 1)) {
+		// 唤醒队列
 		return _dispatch_lane_barrier_complete(dq, 0, 0);
 	}
 
@@ -1081,6 +1088,12 @@ _dispatch_lane_barrier_sync_invoke_and_complete(dispatch_lane_t dq,
 	uint64_t old_state, new_state;
 
 	// similar to _dispatch_queue_drain_try_unlock
+	/*
+	 * 原子锁。检测dq->dq_state与old_state是否相等，如果相等把new_state赋值给dq->dq_state,
+	 * 如果不相等，把dq_state赋值给old_state。
+	 *
+	 * 串行队列走到这里，dq->dq_state与old_state是相等的，会把new_state也就是闭包里的赋值的值给dq->dq_state
+	 */
 	os_atomic_rmw_loop2o(dq, dq_state, old_state, new_state, release, {
 		new_state  = old_state - DISPATCH_QUEUE_SERIAL_DRAIN_OWNED;
 		new_state &= ~DISPATCH_QUEUE_DRAIN_UNLOCK_MASK;
@@ -1759,6 +1772,7 @@ _dispatch_barrier_sync_f_inline(dispatch_queue_t dq, void *ctxt,
 	//
 	// Global concurrent queues and queues bound to non-dispatch threads
 	// always fall into the slow case, see DISPATCH_ROOT_QUEUE_STATE_INIT_VALUE
+	// 全局并发队列或者绑定了非调度线程队列会走if分支
 	if (unlikely(!_dispatch_queue_try_acquire_barrier_sync(dl, tid))) {
 		return _dispatch_sync_f_slow(dl, ctxt, func, DC_FLAG_BARRIER, dl,
 				DC_FLAG_BARRIER | dc_flags);
@@ -1769,6 +1783,7 @@ _dispatch_barrier_sync_f_inline(dispatch_queue_t dq, void *ctxt,
 				DC_FLAG_BARRIER | dc_flags);
 	}
 	_dispatch_introspection_sync_begin(dl);
+	// 一般会走到这里
 	_dispatch_lane_barrier_sync_invoke_and_complete(dl, ctxt, func
 			DISPATCH_TRACE_ARG(_dispatch_trace_item_sync_push_pop(
 					dq, ctxt, func, dc_flags | DC_FLAG_BARRIER)));
@@ -1795,6 +1810,7 @@ static inline void
 _dispatch_sync_f_inline(dispatch_queue_t dq, void *ctxt,
 		dispatch_function_t func, uintptr_t dc_flags)
 {
+	// 串行队列if条件成立
 	if (likely(dq->dq_width == 1)) {
 		return _dispatch_barrier_sync_f(dq, ctxt, func, dc_flags);
 	}
@@ -1806,6 +1822,7 @@ _dispatch_sync_f_inline(dispatch_queue_t dq, void *ctxt,
 	dispatch_lane_t dl = upcast(dq)._dl;
 	// Global concurrent queues and queues bound to non-dispatch threads
 	// always fall into the slow case, see DISPATCH_ROOT_QUEUE_STATE_INIT_VALUE
+	// 全局并发队列或者绑定的是 非调度线程的队列？ 会走进这个if分支
 	if (unlikely(!_dispatch_queue_try_reserve_sync_width(dl))) {
 		return _dispatch_sync_f_slow(dl, ctxt, func, 0, dl, dc_flags);
 	}
@@ -1814,6 +1831,7 @@ _dispatch_sync_f_inline(dispatch_queue_t dq, void *ctxt,
 		return _dispatch_sync_recurse(dl, ctxt, func, dc_flags);
 	}
 	_dispatch_introspection_sync_begin(dl);
+	// 自定义并行队列会来到这个函数 ？
 	_dispatch_sync_invoke_and_complete(dl, ctxt, func DISPATCH_TRACE_ARG(
 			_dispatch_trace_item_sync_push_pop(dq, ctxt, func, dc_flags)));
 }
@@ -1882,6 +1900,7 @@ dispatch_barrier_sync(dispatch_queue_t dq, dispatch_block_t work)
 	_dispatch_barrier_sync_f(dq, work, _dispatch_Block_invoke(work), dc_flags);
 }
 
+#pragma mark ==  dispatch_sync 同步入口
 DISPATCH_NOINLINE
 void
 dispatch_sync(dispatch_queue_t dq, dispatch_block_t work)
@@ -4579,6 +4598,8 @@ _dispatch_queue_override_invoke(dispatch_continuation_t dc,
 	uintptr_t dc_flags = DC_FLAG_CONSUME;
 
 	dou._do = dc->dc_data;
+	// 将自定义队列激活，其root队列挂起。将root queue保存在old_dq变量
+	// 所以这就是为什么，barrier的任务可以提前执行，后面的任务b会被堵塞了
 	old_dp = _dispatch_root_queue_identity_assume(assumed_rq);
 	if (dc_type(dc) == DISPATCH_CONTINUATION_TYPE(OVERRIDE_STEALING)) {
 		flags |= DISPATCH_INVOKE_STEALING;
@@ -4586,11 +4607,13 @@ _dispatch_queue_override_invoke(dispatch_continuation_t dc,
 	}
 	_dispatch_continuation_pop_forwarded(dc, dc_flags, assumed_rq, {
 		if (_dispatch_object_has_vtable(dou._do)) {
+			// 来到 if分支 执行_dispatch_queue_invoke函数
 			dx_invoke(dou._dq, dic, flags);
 		} else {
 			_dispatch_continuation_invoke_inline(dou, flags, assumed_rq);
 		}
 	});
+	// 重新激活 root queue
 	_dispatch_reset_basepri(old_dp);
 	_dispatch_queue_set_current(old_rq);
 }

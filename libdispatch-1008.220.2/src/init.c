@@ -375,6 +375,10 @@ dispatch_get_global_queue(long priority, unsigned long flags)
 	if (qos == DISPATCH_QOS_UNSPECIFIED) {
 		return DISPATCH_BAD_INPUT;
 	}
+	
+	/*
+	 * global也是从root队列中取值，因此barrier不能使用global队列
+	 */
 	return _dispatch_get_root_queue(qos, flags & DISPATCH_QUEUE_OVERCOMMIT);
 }
 

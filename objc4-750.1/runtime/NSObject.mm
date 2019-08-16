@@ -1835,6 +1835,8 @@ callAlloc(Class cls, bool checkNil, bool allocWithZone=false)
         // No alloc/allocWithZone implementation. Go straight to the allocator.
         // fixme store hasCustomAWZ in the non-meta class and 
         // add it to canAllocFast's summary
+        // 没有 alloc/allocWithZone 实现。直接去 分配器。
+        // 修正 将hasCustomAWZ存储在非元类中，并将其添加到canAllocFast的摘要中
         if (fastpath(cls->canAllocFast())) {
             // No ctors, raw isa, etc. Go straight to the metal.
             bool dtor = cls->hasCxxDtor();
@@ -1902,6 +1904,9 @@ _objc_rootInit(id obj)
 {
     // In practice, it will be hard to rely on this function.
     // Many classes do not properly chain -init calls.
+    // 实际上，将会很困难来依靠这个方法
+    // 很多类不能正常的链接 -init方法 （那些类呢？为什么呢？）
+    // 这个方法什么也没做，只是返回自身。那这个方法还有什么左右呢？
     return obj;
 }
 
@@ -2080,10 +2085,12 @@ void arr_init(void)
     return self;
 }
 
+// 类方法 返回类自身
 + (Class)class {
     return self;
 }
 
+// 实例方法 返回实例的isa
 - (Class)class {
     return object_getClass(self);
 }
@@ -2096,7 +2103,13 @@ void arr_init(void)
     return [self class]->superclass;
 }
 
+// isMemberOfClass
+// returns YES if the receiver is an instance of the specified class.
+// 方法调用者必须是传人的类的实例对象才返回YES
+// 源码角度就是取方法调用者的isa与传入的类进行一次比较！
 + (BOOL)isMemberOfClass:(Class)cls {
+    // object_getClass 获取对象的isa
+    // isa 与cls做比较
     return object_getClass((id)self) == cls;
 }
 
@@ -2104,7 +2117,14 @@ void arr_init(void)
     return [self class] == cls;
 }
 
+// isKindOfClass
+// returns YES if the receiver is an instance of the specified class or
+// an instance of any class that inherits from the specified class.
+// 方法调用者是传入类的实例对象或者调用者是传入类的继承链中的类的实例对象，则返回YES
 + (BOOL)isKindOfClass:(Class)cls {
+    // 1、将self的isa赋值给 tcls
+    // 2、tcls与cls做比较
+    // 3、将tcls的父类赋值给tcls，goto 2
     for (Class tcls = object_getClass((id)self); tcls; tcls = tcls->superclass) {
         if (tcls == cls) return YES;
     }
@@ -2119,6 +2139,9 @@ void arr_init(void)
 }
 
 + (BOOL)isSubclassOfClass:(Class)cls {
+    // 1、 将自身赋值给 tcls
+    // 2、 tcls 与 cls 做比较
+    // 3、 将tcls的父类赋值给 tcls，goto 2
     for (Class tcls = self; tcls; tcls = tcls->superclass) {
         if (tcls == cls) return YES;
     }

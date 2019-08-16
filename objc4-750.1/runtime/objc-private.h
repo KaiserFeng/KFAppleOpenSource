@@ -71,7 +71,7 @@ union isa_t {
 #endif
 };
 
-
+// objc 对象结构体
 struct objc_object {
 private:
     isa_t isa;
@@ -79,17 +79,21 @@ private:
 public:
 
     // ISA() assumes this is NOT a tagged pointer object
+    // ISA() 假定这不是一个 标记指针对象
     Class ISA();
 
     // getIsa() allows this to be a tagged pointer object
+    // getIsa() 允许这是一个标记指针对象
     Class getIsa();
 
     // initIsa() should be used to init the isa of new objects only.
+    // initIsa() 仅仅应该用来初始化一个新对象的isa
     // If this object already has an isa, use changeIsa() for correctness.
-    // initInstanceIsa(): objects with no custom RR/AWZ
-    // initClassIsa(): class objects
-    // initProtocolIsa(): protocol objects
-    // initIsa(): other objects
+    // 如果这个对象已经存在一个isa，用 changeIsa()是正确的？
+    // initInstanceIsa(): objects with no custom RR/AWZ         // 实例对象
+    // initClassIsa(): class objects                            // 类对象
+    // initProtocolIsa(): protocol objects                      // 协议对象
+    // initIsa(): other objects                                 // 其他对象
     void initIsa(Class cls /*nonpointer=false*/);
     void initClassIsa(Class cls /*nonpointer=maybe*/);
     void initProtocolIsa(Class cls /*nonpointer=maybe*/);
@@ -97,31 +101,35 @@ public:
 
     // changeIsa() should be used to change the isa of existing objects.
     // If this is a new object, use initIsa() for performance.
+    // changeIsa() 应该被用来改变已存在对象的isa
+    // 如果这是一个新对象，应该用initIsa()
     Class changeIsa(Class newCls);
 
-    bool hasNonpointerIsa();
-    bool isTaggedPointer();
-    bool isBasicTaggedPointer();
-    bool isExtTaggedPointer();
-    bool isClass();
+    bool hasNonpointerIsa();                /// ？？？
+    bool isTaggedPointer();                 /// 是一个标记指针
+    bool isBasicTaggedPointer();            /// ？？？
+    bool isExtTaggedPointer();              /// ？？？
+    bool isClass();                         /// 是一个类
 
-    // object may have associated objects?
+    // object may have associated objects?  // 关联对象
     bool hasAssociatedObjects();
     void setHasAssociatedObjects();
 
-    // object may be weakly referenced?
+    // object may be weakly referenced?   // 弱引用
     bool isWeaklyReferenced();
     void setWeaklyReferenced_nolock();
 
-    // object may have -.cxx_destruct implementation?
+    // object may have -.cxx_destruct implementation?   // 对象有.cxx_destruct实现
     bool hasCxxDtor();
 
     // Optimized calls to retain/release methods
+    // 优化调用 retain/release方法
     id retain();
     void release();
     id autorelease();
 
     // Implementations of retain/release methods
+    // 实现 retain/release方法。前面加了个root
     id rootRetain();
     bool rootRelease();
     id rootAutorelease();
@@ -130,6 +138,7 @@ public:
     uintptr_t rootRetainCount();
 
     // Implementation of dealloc methods
+    // 实现 dealloc方法
     bool rootIsDeallocating();
     void clearDeallocating();
     void rootDealloc();

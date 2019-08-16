@@ -40,6 +40,18 @@ int main(int argc, const char * argv[]) {
 //                [p2 personName:[NSString stringWithFormat:@"12345678+%d",i]];
 //            });
 //        }
+        
+        
+        
+        
+        BOOL res1 = [(id)[NSObject class] isKindOfClass:[NSObject class]];
+        BOOL res2 = [(id)[NSObject class] isMemberOfClass:[NSObject class]];
+        BOOL res3 = [(id)[Person class] isKindOfClass:[Person class]];
+        BOOL res4 = [(id)[Person class] isMemberOfClass:[Person class]];
+        BOOL res5 = [p1 isKindOfClass:[NSObject class]];
+        BOOL res6 = [p1 isMemberOfClass:[Person class]];
+        
+        NSLog(@"res1==%d=res2=%d=res3=%d=res4=%d=res5=%d=res6=%d",res1,res2,res3,res4,res5,res6);
     }
     return 0;
 }
