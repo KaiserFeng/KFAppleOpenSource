@@ -1671,6 +1671,9 @@ DISPATCH_ALWAYS_INLINE
 static inline dispatch_queue_t
 _dispatch_queue_get_current(void)
 {
+	/*
+	 * tsd（Thread specific data） 来确认当前是运行在那个队列上的
+	 */
 	return (dispatch_queue_t)_dispatch_thread_getspecific(dispatch_queue_key);
 }
 

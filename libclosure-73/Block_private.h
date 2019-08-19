@@ -236,7 +236,7 @@ struct Block_layout {
     void *isa;
     volatile int32_t flags; // contains ref count  // 引用计数？
     int32_t reserved;              // 保留字段
-    BlockInvokeFunction invoke;    // 调用
+    BlockInvokeFunction invoke;    // 调用  如何调用呢？
     struct Block_descriptor_1 *descriptor;
     // imported variables
 };

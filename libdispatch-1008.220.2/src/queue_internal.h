@@ -921,7 +921,9 @@ dispatch_queue_attr_info_t _dispatch_queue_attr_to_info(dispatch_queue_attr_t);
 
 /*
  * dispatch_continuation_t 用来封装block对象的，保存block上下文环境和block执行函数等
- * dispatch_function_t 只是一个函数指针。typedef void (*dispatch_function_t)(void *);
+ * dispatch_function_t 只是一个函数指针。typedef void (*dispatch_function_t)(void  *);承担执行任务的对象，dispatch_client_callout最终以dc_func（dc_ctxt）方式回调。
+ * dc_ctxt 存储了continuation对象的上下文数据，同样用于执行任务。 /// 存储的什么样的上下文数据呢？
+ * do_vtable 只有当do_vtable的值小于127时才表示变量是一个continuation
  */
 
 // If dc_flags is less than 0x1000, then the object is a continuation.
@@ -992,30 +994,41 @@ dispatch_queue_attr_info_t _dispatch_queue_attr_to_info(dispatch_queue_attr_t);
 #define ROUND_UP_TO_CONTINUATION_SIZE(x) \
 		(((x) + (DISPATCH_CONTINUATION_SIZE - 1u)) & \
 		~(DISPATCH_CONTINUATION_SIZE - 1u))
-
+// 标记位，用来标识continuation类别
 // continuation is a dispatch_sync or dispatch_barrier_sync
+// continuation 是一个同步或者栅栏同步
 #define DC_FLAG_SYNC_WAITER				0x001ul
 // continuation acts as a barrier
+// continuation 是一个栅栏
 #define DC_FLAG_BARRIER					0x002ul
 // continuation resources are freed on run
 // this is set on async or for non event_handler source handlers
+// continuation 资源在运行时被释放。这是在异步或非事件处理程序源处理程序上设置的。
 #define DC_FLAG_CONSUME					0x004ul
 // continuation has a group in dc_data
+// continuation 在dc_data中有一个组
 #define DC_FLAG_GROUP_ASYNC				0x008ul
 // continuation function is a block (copied in dc_ctxt)
+// continuation function是一个block（从dc_ctxt中拷贝来的）
 #define DC_FLAG_BLOCK					0x010ul
 // continuation function is a block with private data, implies BLOCK_BIT
+// continuation function 是一个拥有私有数据的block
 #define DC_FLAG_BLOCK_WITH_PRIVATE_DATA	0x020ul
 // source handler requires fetching context from source
+// 源处理程序需要从源获取上下文
 #define DC_FLAG_FETCH_CONTEXT			0x040ul
 // continuation is a dispatch_async_and_wait
+// continuation 是一个 dispatch_async_and_wait
 #define DC_FLAG_ASYNC_AND_WAIT			0x080ul
 // bit used to make sure dc_flags is never 0 for allocated continuations
+// bit用来确保dc_flags不会是0，在构建continuations的时候
 #define DC_FLAG_ALLOCATED				0x100ul
 // continuation is an internal implementation detail that should not be
 // introspected
+// continuation 是一个内部实现的细节，不应该被反思。
 #define DC_FLAG_NO_INTROSPECTION		0x200ul
 // never set on continuations, used by mach.c only
+// 从不设置在 continuations，只被mach.c使用
 #define DC_FLAG_MACH_BARRIER		0x1000000ul
 
 typedef struct dispatch_continuation_s {

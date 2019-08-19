@@ -171,6 +171,15 @@
 #define DISPATCH_VTABLE_INSTANCE(name, ...) \
 		DISPATCH_VTABLE_SUBCLASS_INSTANCE(name, name, __VA_ARGS__)
 
+
+/*
+ * libdispatch的结构对象都拥有自己的一张do_vtable虚拟表，同样采用模板式的方式生成，
+ * 每一个具体的结构类型会生成一张对应类型的虚拟表，但是属性基本是统一的
+ * 虚拟表采用类型名拼接的方式生成不同类型的重载函数，由于libdispatch类型采用union结构，这两者结合极大的保证了执行的灵活性
+ * do_type 数据的具体类型
+ * do_kind 数据的类型描述字符串，比如全局队列为global-queue
+ * do_invoke 唤醒队列的方法，全局队列和主队列此项为NULL
+ */
 #if USE_OBJC
 #define DISPATCH_VTABLE_SUBCLASS_INSTANCE(name, ctype, ...) \
 		OS_OBJECT_VTABLE_SUBCLASS_INSTANCE(dispatch_##name, dispatch_##ctype, \

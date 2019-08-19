@@ -30,6 +30,22 @@
 #include <sys/qos.h>
 #endif
 
+
+/*
+ * dispatch 执行 block 大致过程：
+ * 1、libdispatch从queue自身的FIFO队列取出dispatch_continuation_t结构体类型的数据；
+ * 2、调用 _pthread_workqueue_addthreads将信息传递给pthread，
+ *    该函数内部调用__workq_kernreturn（libsystem_kernel.dylib）；
+ * 3、__workq_kernreturn 线程回调执行 _pthread_wqthread，
+ *   该函数内部有libdispatch的回调函数 _dispatch_worker_thread2
+ * 4、在 _dispatch_worker_thread2 回调函数中执行_dispatch_root_queue_drain 取出queue中的block任务并执行！
+ */
+
+/*
+ * Question： 如何堵塞/如何唤醒
+ * 个人感觉是 将队列挂起，激活自定义队列，自定义队列任务执行结束，将之前挂起的队列再次激活。
+ */
+
 DISPATCH_ASSUME_NONNULL_BEGIN
 
 /*!
@@ -506,6 +522,14 @@ struct dispatch_queue_s _dispatch_main_q;
  * @result
  * Returns the main queue. This queue is created automatically on behalf of
  * the main thread before main() is called.
+ 
+ 
+ * 返回主线程上绑定的默认队列
+ * 为了回调提交到主队列上的block，应用程序必须调用dispatch_main(), NSApplicationMain(),或者使用主线程上的CFRunLoop
+ * 主队列用于在应用程序上下文中与主线程和主runloop交互。
+ * 因为主队列不完全像一个普通的串行队列，它可能有不必要的副作用，当使用的过程中，不是UI应用程序（后台程序）。
+ * 对于这样的过程，应该避免主队列。
+ * 返回主队列。在调用main()之前，这个队列是代表主线程自动创建的。
  */
 DISPATCH_INLINE DISPATCH_ALWAYS_INLINE DISPATCH_CONST DISPATCH_NOTHROW
 dispatch_queue_main_t

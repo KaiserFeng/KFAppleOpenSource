@@ -163,18 +163,18 @@ typedef union {
 #ifndef __OBJC__
 typedef union {
 	struct _os_object_s *_os_obj;
-	struct dispatch_object_s *_do;
-	struct dispatch_queue_s *_dq;
-	struct dispatch_queue_attr_s *_dqa;
+	struct dispatch_object_s *_do;   // 这个是 GCD 的基类，GCD 数据结构都是由这个结构体搭建起来的。
+	struct dispatch_queue_s *_dq;   //这个是任务队列，我们创建的对列都是这个类型的，不管是串行队列还是并发队列。
+	struct dispatch_queue_attr_s *_dqa; //这个是任务队列的属性，任务队列的属性里面包含了任务队列里面的一些操作函数，可以表明这个任务队列是串行还是并发队列。
 	struct dispatch_group_s *_dg;
-	struct dispatch_source_s *_ds;
+	struct dispatch_source_s *_ds; //这个是 GCD 的 sourece ，可以监测内核事件，文件读写事件和 socket 通信事件等。
 	struct dispatch_mach_s *_dm;
 	struct dispatch_mach_msg_s *_dmsg;
-	struct dispatch_semaphore_s *_dsema;
+	struct dispatch_semaphore_s *_dsema;  // 信号量，如果了解过 pthread 都知道，信号量可以用来调度线程。
 	struct dispatch_data_s *_ddata;
 	struct dispatch_io_s *_dchannel;
 
-	struct dispatch_continuation_s *_dc;
+	struct dispatch_continuation_s *_dc;   // 这个是任务类型，通常 dispatch_async 内的 block 最终都会封装成这个数据类型。
 	struct dispatch_sync_context_s *_dsc;
 	struct dispatch_operation_s *_doperation;
 	struct dispatch_disk_s *_ddisk;
@@ -187,6 +187,7 @@ typedef union {
 	dispatch_lane_class_t _dlu;
 	uintptr_t _do_value;
 } dispatch_object_t DISPATCH_TRANSPARENT_UNION;
+// dispatch_object_t 是一个联合体，所以当用 dispatch_object_t 可以代表这个结合体内的所有数据类型。
 
 DISPATCH_ALWAYS_INLINE
 static inline dispatch_object_t

@@ -4589,17 +4589,17 @@ _dispatch_workloop_push(dispatch_workloop_t dwl, dispatch_object_t dou,
 #if HAVE_PTHREAD_WORKQUEUE_QOS
 static void
 _dispatch_queue_override_invoke(dispatch_continuation_t dc,
-		dispatch_invoke_context_t dic, dispatch_invoke_flags_t flags)
+								dispatch_invoke_context_t dic, dispatch_invoke_flags_t flags)
 {
 	dispatch_queue_t old_rq = _dispatch_queue_get_current();
 	dispatch_queue_global_t assumed_rq = dc->dc_other;
 	dispatch_priority_t old_dp;
 	dispatch_object_t dou;
 	uintptr_t dc_flags = DC_FLAG_CONSUME;
-
+	
 	dou._do = dc->dc_data;
 	// 将自定义队列激活，其root队列挂起。将root queue保存在old_dq变量
-	// 所以这就是为什么，barrier的任务可以提前执行，后面的任务b会被堵塞了
+	// 所以这就是为什么，barrier的任务可以提前执行，后面的任务会被堵塞了
 	old_dp = _dispatch_root_queue_identity_assume(assumed_rq);
 	if (dc_type(dc) == DISPATCH_CONTINUATION_TYPE(OVERRIDE_STEALING)) {
 		flags |= DISPATCH_INVOKE_STEALING;

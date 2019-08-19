@@ -377,7 +377,8 @@ dispatch_get_global_queue(long priority, unsigned long flags)
 	}
 	
 	/*
-	 * global也是从root队列中取值，因此barrier不能使用global队列
+	 * global也是从root队列中取值，因此barrier不能使用global队列，需要了解barrier实现原理！
+	 * 从 _dispatch_root_queues[] 队列数组中取值（4-15 12个Root队列）
 	 */
 	return _dispatch_get_root_queue(qos, flags & DISPATCH_QUEUE_OVERCOMMIT);
 }
